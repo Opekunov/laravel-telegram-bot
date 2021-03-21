@@ -13,7 +13,7 @@ class LaravelTelegramBotServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        include __DIR__.'config/telegram.php';
+        include __DIR__.'/config/telegram.php';
     }
 
     /**
@@ -23,6 +23,8 @@ class LaravelTelegramBotServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        $this->publishes([
+            __DIR__.'/config/telegram.php' => config_path('telegram.php'),
+        ]);
     }
 }
