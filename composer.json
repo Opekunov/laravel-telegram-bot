@@ -1,0 +1,19 @@
+{
+    "name": "opekunov/laravel-telegram-bot",
+    "description": "Telegram Bot for Laravel",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alexander Opekunov",
+            "email": "iam@opekunov.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Opekunov\\Greetr\\": "src/"
+        }
+    },
+    "require": {}
+}
