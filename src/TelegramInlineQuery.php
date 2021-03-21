@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Telegram;
+namespace Opekunov\LaravelTelegramBot\Telegram;
 
 
 class TelegramInlineQuery extends TelegramCore

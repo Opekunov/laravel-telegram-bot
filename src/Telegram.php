@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Telegram;
+namespace Opekunov\LaravelTelegramBot\Telegram;
 
 use Illuminate\Support\Str;
 
