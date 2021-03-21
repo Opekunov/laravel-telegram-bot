@@ -12,8 +12,11 @@
     ],
     "minimum-stability": "dev",
     "autoload": {
+        "classmap": [
+            "src/"
+        ],
         "psr-4": {
-            "Opekunov\\Greetr\\": "src/"
+            "Opekunov\\LaravelTelegramBot\\": "src/"
         }
     },
     "require": {}
