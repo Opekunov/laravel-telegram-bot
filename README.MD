@@ -1,1 +1,1 @@
-```php artisan vendor:publish --provider="JohnDoe\BlogPackage\BlogPackageServiceProvider" --tag="config"```
+```php artisan vendor:publish --provider="Opekunov\LaravelTelegramBot" --tag="config"```
