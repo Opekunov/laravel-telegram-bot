@@ -1,6 +1,7 @@
 {
     "name": "opekunov/laravel-telegram-bot",
     "description": "Telegram Bot for Laravel",
+    "version": "0.8",
     "type": "library",
     "license": "MIT",
     "authors": [
