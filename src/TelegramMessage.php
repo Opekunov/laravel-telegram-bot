@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Opekunov\LaravelTelegramBot\Telegram;
+namespace Opekunov\LaravelTelegramBot;
 
 
 class TelegramMessage extends TelegramCore

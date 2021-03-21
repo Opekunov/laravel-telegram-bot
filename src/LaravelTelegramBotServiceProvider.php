@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Providers;
+namespace Opekunov\LaravelTelegramBot;
 
 use Illuminate\Support\ServiceProvider;
 
