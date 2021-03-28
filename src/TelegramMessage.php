@@ -133,40 +133,6 @@ class TelegramMessage extends TelegramCore
             ]);
     }
 
-    public function addDefaultEventButtonsRow()
-    {
-        $buttons = [
-            [
-                'text' => '👍 1',
-                'callback_data' => 'event_1'
-            ],
-            [
-                'text' => '❤️ 3',
-                'callback_data' => 'event_3'
-            ],
-            [
-                'text' => '😍️ 5',
-                'callback_data' => 'event_5'
-            ],
-            [
-                'text' => '🔥 10',
-                'callback_data' => 'event_10'
-            ]
-        ];
-        return $this->addButtonsRow($buttons);
-    }
-
-    public function addEventLikesRow(int $stash, int $maxStash)
-    {
-        $button = [
-            [
-                "text" => "Собрано $stash / $maxStash ❤️",
-                'callback_data' => 'ignore'
-            ]
-        ];
-        return $this->addButtonsRow($button);
-    }
-
     public function sendTypingAction(int $chatId){
         return $this->sendChatAction('typing', $chatId);
     }
