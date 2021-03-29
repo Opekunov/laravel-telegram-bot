@@ -18,6 +18,11 @@ class TelegramMessage extends TelegramCore
         return $this->payload['reply_markup']['inline_keyboard'];
     }
 
+    public function getPayload()
+    {
+        return $this->payload;
+    }
+
     public static function create(string $content = ''): self
     {
         return new self($content);
