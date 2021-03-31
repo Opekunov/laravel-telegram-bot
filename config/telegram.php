@@ -3,7 +3,7 @@ return [
 
     'bot-api' => [
         'token' => env('TELEGRAM_DEFAULT_BOT_TOKEN', ''),
-        'base_uri' => env('TELEGRAM_BASE_URI', 'http://api.telegram.org')
+        'base_uri' => env('TELEGRAM_BASE_URI', 'https://api.telegram.org')
     ],
     'tech' => [
         'admin_chat' => env('TELEGRAM_ADMIN_CHAT'),
