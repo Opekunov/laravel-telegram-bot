@@ -23,7 +23,7 @@ class TelegramCore
      * @param null $data Дата
      * @return \Illuminate\Http\Client\Response
      */
-    protected function sendRequest(string $endPoint, $data = null)
+    protected function sendRequest(string $endPoint, $data = [])
     {
         return $this->sendRequestWithBotToken($this->_botUri, $endPoint, $data);
     }
@@ -35,7 +35,7 @@ class TelegramCore
      * @param null $data Дата
      * @return \Illuminate\Http\Client\Response
      */
-    protected function sendRequestWithBotToken(string $botToken, string $endPoint, $data = null)
+    protected function sendRequestWithBotToken(string $botToken, string $endPoint, $data = [])
     {
         $uri = $this->_baseUri . '/bot' . $botToken . '/' . $endPoint;
         return Http::post($uri, $data);
