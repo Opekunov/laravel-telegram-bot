@@ -31,7 +31,7 @@ class TelegramMessage extends TelegramCore
     public function __construct(string $content = '')
     {
         $this->content($content);
-        $this->payload['parse_mode'] = 'Markdown';
+        $this->payload['parse_mode'] = 'MarkdownV2';
         parent::__construct();
     }
 
@@ -63,19 +63,8 @@ class TelegramMessage extends TelegramCore
         return $this;
     }
 
-    public function disableNotification()
-    {
-        $this->payload['disable_notification'] = true;
-        return $this;
-    }
-
-    public function disableWebPagePreview()
-    {
-        $this->payload['disable_web_page_preview'] = true;
-        return $this;
-    }
-
     /**
+     * !!!DEPRECATED!!!
      * @param int $chatId
      * @param null $botToken
      * @return \Illuminate\Http\Client\Response
@@ -88,6 +77,72 @@ class TelegramMessage extends TelegramCore
 
         return !$botToken ? $this->sendRequest($type, $this->payload) : $this->sendRequestWithBotToken($botToken, $type, $this->payload);
     }
+
+    /**
+     * @param int $chatId
+     * @param null $botToken
+     * @return \Illuminate\Http\Client\Response
+     */
+    public function send(int $chatId, string $botToken = null) : \Illuminate\Http\Client\Response
+    {
+        $this->payload['chat_id'] = $chatId;
+        $type = isset($this->payload['photo']) ? 'sendPhoto' : 'sendMessage';
+        $type = isset($this->payload['video']) ? 'sendVideo' : $type;
+
+        return !$botToken ? $this->sendRequest($type, $this->payload) : $this->sendRequestWithBotToken($botToken, $type, $this->payload);
+    }
+
+    /**
+     * Sends the message silently. Users will receive a notification with no sound.
+     * @return $this
+     */
+    public function silentMode(): TelegramMessage
+    {
+        $this->payload['disable_notification'] = true;
+        return $this;
+    }
+
+    /**
+     * Disables link previews for links in this message
+     * @return $this
+     */
+    public function disableWebPagePreview(): TelegramMessage
+    {
+        $this->payload['disable_web_page_preview'] = true;
+        return $this;
+    }
+
+    /**
+     * Disable parse mode
+     * @return $this
+     */
+    public function disableParseMode(){
+        unset($this->payload['parse_mode']);
+        return $this;
+    }
+
+    /**
+     * MarkdownV2 style
+     * https://core.telegram.org/bots/api#markdownv2-style
+     * @return $this
+     */
+    public function setMarkdownV2ParseMode(): TelegramMessage
+    {
+        $this->payload['parse_mode'] = 'MarkdownV2';
+        return $this;
+    }
+
+    /**
+     * HTML Style
+     * https://core.telegram.org/bots/api#html-style
+     * @return $this
+     */
+    public function setHTMLParseMode(): TelegramMessage
+    {
+        $this->payload['parse_mode'] = 'html';
+        return $this;
+    }
+
 
     /**
      * @param int $chatId
