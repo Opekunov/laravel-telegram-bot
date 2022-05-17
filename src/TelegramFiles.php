@@ -4,14 +4,19 @@
 namespace Opekunov\LaravelTelegramBot;
 
 
+use TelegramRequestException;
+
 class TelegramFiles extends TelegramCore
 {
     /**
      * Ссылка на первый аватар пользователя
-     * @param null $tgId если не указан Telegram ID пользователя, берется TgID отправителя
+     *
+     * @param  int  $tgId  если не указан Telegram ID пользователя, берется Telegram ID отправителя
+     *
      * @return string|null ссылка
+     * @throws TelegramRequestException
      */
-    public function getAvatarLink($tgId)
+    public function getAvatarLink(int $tgId): ?string
     {
         $avatars = $this->sendRequest('getUserProfilePhotos', [
             'user_id' => $tgId,
@@ -26,25 +31,31 @@ class TelegramFiles extends TelegramCore
 
     /**
      * Get File Telegram
+     *
      * @param $fileID
+     *
      * @return array
+     * @throws TelegramRequestException
      */
-    public function getFile($fileID)
+    public function getFile($fileID): array
     {
         return $this->sendRequest('getFile', ['file_id' => $fileID]);
     }
 
     /**
      * Финальная ссылка на файл TG
+     *
      * @param $fileID
+     *
      * @return string|null
+     * @throws TelegramRequestException
      */
     public function getFileLink($fileID)
     {
         if (!$file = $this->getFile($fileID)) return null;
-        return config('telegram.bot-api.base_uri')
+        return $this->_baseUri
             . '/file/bot'
-            . config('telegram.bot-api.token')
+            . $this->_botToken
             . '/' . $file['result']['file_path'] ?? null;
     }
 }

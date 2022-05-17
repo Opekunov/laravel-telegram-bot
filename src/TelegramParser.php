@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 
 class TelegramParser
 {
-    private $_response;
+    private array $_response;
 
     /**
      * Telegram parser constructor.
@@ -25,7 +25,6 @@ class TelegramParser
      */
     public function isPrivateChat()
     {
-        \Log::info('', ['$this->getType()' => $this->getType(), '$this->getChat()' => $this->getChat()]);
         return $this->getType() == 'private';
     }
 
