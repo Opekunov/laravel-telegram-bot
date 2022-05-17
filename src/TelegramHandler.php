@@ -6,6 +6,8 @@ class TelegramHandler extends Telegram
 {
     private array $updates = [];
 
+    private TelegramParser $parser;
+
     /**
      * @throws Exceptions\TelegramBadTokenException
      * @throws Exceptions\TelegramRequestException
@@ -13,5 +15,10 @@ class TelegramHandler extends Telegram
     public function handleUpdates()
     {
         $this->updates = $this->getUpdates();
+    }
+
+    public function handle(array $response): TelegramParser
+    {
+        return $this->parser = new TelegramParser($response);
     }
 }

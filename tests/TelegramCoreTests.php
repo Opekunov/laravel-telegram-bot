@@ -31,6 +31,7 @@ class TelegramCoreTests extends TestCase
     {
         $res = $this->tgHandler->getUpdates();
 
+
         $this->assertIsArray($res);
         $this->assertArrayHasKey('update_id', $res[0]);
     }
