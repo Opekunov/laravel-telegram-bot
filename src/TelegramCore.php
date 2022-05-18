@@ -66,6 +66,8 @@ class TelegramCore
         } catch (RequestException $e) {
             if ($e->getResponse()->getStatusCode() === 404) {
                 throw new TelegramBadTokenException('Bad token. Response body: '.$e->getResponse()->getBody());
+            } else {
+                throw new TelegramRequestException($e->getMessage(), $e->getCode(), $e->getPrevious());
             }
         } catch (GuzzleException $e) {
             throw new TelegramRequestException($e->getMessage(), $e->getCode(), $e->getPrevious());
