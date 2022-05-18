@@ -78,6 +78,11 @@ class TelegramMessage extends TelegramCore
         $type = isset($this->payload['photo']) ? 'sendPhoto' : 'sendMessage';
         $type = isset($this->payload['video']) ? 'sendVideo' : $type;
 
+        if($this->payload['parse_mode'] === 'MarkdownV2')
+        {
+            $this->payload['text'] = $this->escapeMarkdown($this->payload['text']);
+        }
+
         return !$botToken ? $this->sendRequest($type, $this->payload) : $this->sendRequestWithBotToken($botToken, $type, $this->payload);
     }
 
@@ -112,13 +117,18 @@ class TelegramMessage extends TelegramCore
 
     /**
      * MarkdownV2 style
-     * https://core.telegram.org/bots/api#markdownv2-style
+     * @see https://core.telegram.org/bots/api#markdownv2-style
      * @return $this
      */
     public function setMarkdownV2ParseMode(): TelegramMessage
     {
         $this->payload['parse_mode'] = 'MarkdownV2';
         return $this;
+    }
+
+    private function escapeMarkdown(string $string)
+    {
+        return preg_replace('/[_*\[\]()~`>#+-=|{}.!]{1}/is', '\\$0', $string);
     }
 
     /**
@@ -134,11 +144,14 @@ class TelegramMessage extends TelegramCore
 
 
     /**
-     * @param int $chatId
-     * @param string $stickerPath
-     * @return \Illuminate\Http\Client\Response
+     * @param  int  $chatId
+     * @param  string  $stickerPath
+     *
+     * @return array
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramRequestException
      */
-    public function sendSticker(int $chatId, string $stickerPath) : \Illuminate\Http\Client\Response
+    public function sendSticker(int $chatId, string $stickerPath): array
     {
         $this->payload['chat_id'] = $chatId;
         $this->payload['sticker'] = $stickerPath;
@@ -186,10 +199,11 @@ class TelegramMessage extends TelegramCore
         return $this->sendChatAction('typing', $chatId);
     }
 
-    public function sendChatAction(string $action, int $chatId){
+    public function sendChatAction(string $action, int $chatId)
+    {
         $this->payload = [
             'chat_id' => $chatId,
-            'action' => $action
+            'action'  => $action
         ];
         return $this->sendRequest('sendChatAction', $this->payload);
     }
