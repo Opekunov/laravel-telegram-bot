@@ -48,6 +48,8 @@ class TelegramCore
      */
     protected function sendRequestWithBotToken(string $botToken, string $endPoint, array $data = []): array
     {
+        //todo: {"ok":false,"error_code":400,"description":"Bad Request: message text is empty"}
+
         $uri = $this->_baseUri.'/bot'.$botToken.'/'.$endPoint;
 
         $client = new Client([
@@ -55,7 +57,7 @@ class TelegramCore
         ]);
 
         try {
-            $response = $client->request('POST', $uri, $data);
+            $response = $client->request('POST', $uri, ['body' => $data]);
 
             $decodedResponse = json_decode($response->getBody(), true);
             if ($decodedResponse === null) {
