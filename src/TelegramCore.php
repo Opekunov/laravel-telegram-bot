@@ -71,7 +71,7 @@ class TelegramCore
             throw new TelegramRequestException($e->getMessage(), $e->getCode(), $e->getPrevious());
         }
 
-        return $decodedResponse['result'];
+        return is_array($decodedResponse['result']) ? $decodedResponse['result'] : $decodedResponse;
     }
 
 }
