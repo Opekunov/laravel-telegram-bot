@@ -13,21 +13,6 @@ class TelegramMessage extends TelegramCore
     /** @var array Inline Keyboard Buttons. */
     protected $buttons = [];
 
-    public function getButtons()
-    {
-        return $this->payload['reply_markup']['inline_keyboard'];
-    }
-
-    public function getPayload()
-    {
-        return $this->payload;
-    }
-
-    public static function create(string $content = ''): self
-    {
-        return new self($content);
-    }
-
     public function __construct(string $apikey, string $content = '')
     {
         $this->content($content);
@@ -41,19 +26,36 @@ class TelegramMessage extends TelegramCore
         return $this;
     }
 
+    public static function create(string $content = ''): self
+    {
+        return new self($content);
+    }
+
+    public function getButtons()
+    {
+        return $this->payload['reply_markup']['inline_keyboard'];
+    }
+
+    public function getPayload()
+    {
+        return $this->payload;
+    }
+
     public function photo(string $webPath, string $caption = null): self
     {
         $this->payload['photo'] = $webPath;
-        if($caption)
+        if ($caption) {
             $this->payload['caption'] = $caption;
+        }
         return $this;
     }
 
     public function video(string $webPath, string $caption = null): self
     {
         $this->payload['video'] = $webPath;
-        if($caption)
+        if ($caption) {
             $this->payload['caption'] = $caption;
+        }
         return $this;
     }
 
@@ -78,16 +80,25 @@ class TelegramMessage extends TelegramCore
         $type = isset($this->payload['photo']) ? 'sendPhoto' : 'sendMessage';
         $type = isset($this->payload['video']) ? 'sendVideo' : $type;
 
-        if($this->payload['parse_mode'] === 'MarkdownV2')
-        {
+        if ($this->payload['parse_mode'] === 'MarkdownV2') {
             $this->payload['text'] = $this->escapeMarkdown($this->payload['text']);
+        }
+
+        if (isset($this->payload['reply_markup'])) {
+            $this->payload['reply_markup'] = json_encode($this->payload['reply_markup']);
         }
 
         return !$botToken ? $this->sendRequest($type, $this->payload) : $this->sendRequestWithBotToken($botToken, $type, $this->payload);
     }
 
+    private function escapeMarkdown(string $string)
+    {
+        return preg_replace('/[_*\[\]()~`>#+-=|{}.!]{1}/is', '\\\$0', $string);
+    }
+
     /**
      * Sends the message silently. Users will receive a notification with no sound.
+     *
      * @return $this
      */
     public function silentMode(): TelegramMessage
@@ -98,6 +109,7 @@ class TelegramMessage extends TelegramCore
 
     /**
      * Disables link previews for links in this message
+     *
      * @return $this
      */
     public function disableWebPagePreview(): TelegramMessage
@@ -108,15 +120,18 @@ class TelegramMessage extends TelegramCore
 
     /**
      * Disable parse mode
+     *
      * @return $this
      */
-    public function disableParseMode(){
+    public function disableParseMode()
+    {
         unset($this->payload['parse_mode']);
         return $this;
     }
 
     /**
      * MarkdownV2 style
+     *
      * @see https://core.telegram.org/bots/api#markdownv2-style
      * @return $this
      */
@@ -126,14 +141,10 @@ class TelegramMessage extends TelegramCore
         return $this;
     }
 
-    private function escapeMarkdown(string $string)
-    {
-        return preg_replace('/[_*\[\]()~`>#+-=|{}.!]{1}/is', '\\$0', $string);
-    }
-
     /**
      * HTML Style
      * https://core.telegram.org/bots/api#html-style
+     *
      * @return $this
      */
     public function setHTMLParseMode(): TelegramMessage
@@ -163,21 +174,10 @@ class TelegramMessage extends TelegramCore
     public function addButtonsRow(array $buttons)
     {
         //inline_keyboard
-        if (!isset($this->payload['reply_markup']))
+        if (!isset($this->payload['reply_markup'])) {
             $this->payload['reply_markup'] = ['inline_keyboard' => [$buttons]];
-        else
+        } else {
             $this->payload['reply_markup']['inline_keyboard'][] = $buttons;
-        return $this;
-    }
-
-    public function addReplyButtonsRow(array $buttons)
-    {
-        //inline_keyboard
-        if (!isset($this->payload['reply_markup']))
-            $this->payload['reply_markup'] = ['resize_keyboard' => true, 'keyboard' => [$buttons]];
-        else {
-            $this->payload['reply_markup']['resize_keyboard'] = true;
-            $this->payload['reply_markup']['keyboard'][] = $buttons;
         }
         return $this;
     }
@@ -191,11 +191,24 @@ class TelegramMessage extends TelegramCore
             ->addReplyButtonsRow([
                 [
                     'text' => 'Перейти на сайт',
-                    ]
+                ]
             ]);
     }
 
-    public function sendTypingAction(int $chatId){
+    public function addReplyButtonsRow(array $buttons)
+    {
+        //inline_keyboard
+        if (!isset($this->payload['reply_markup'])) {
+            $this->payload['reply_markup'] = ['resize_keyboard' => true, 'keyboard' => [$buttons]];
+        } else {
+            $this->payload['reply_markup']['resize_keyboard'] = true;
+            $this->payload['reply_markup']['keyboard'][] = $buttons;
+        }
+        return $this;
+    }
+
+    public function sendTypingAction(int $chatId)
+    {
         return $this->sendChatAction('typing', $chatId);
     }
 
@@ -212,8 +225,8 @@ class TelegramMessage extends TelegramCore
     {
         $this->payload = [
             'reply_markup' => $this->payload['reply_markup'],
-            'chat_id' => $chatId,
-            'message_id' => $messageId
+            'chat_id'      => $chatId,
+            'message_id'   => $messageId
         ];
         return $this->sendRequest('editMessageReplyMarkup', $this->payload);
     }
@@ -221,19 +234,23 @@ class TelegramMessage extends TelegramCore
     /**
      * Используйте этот метод для отправки ответов на запросы обратного вызова, отправленные с встроенных клавиатур.
      * Ответ будет отображаться пользователю в виде уведомления в верхней части экрана чата или в виде предупреждения.
-     * @param string $callbackQueryId Уникальный идентификатор ответа на запрос
-     * @param string $text Текст уведомления. Если не указан, пользователю ничего не будет показано, 0-200 символов
-     * @param int $cacheTime Максимальное время в секундах, в течение которого результат запроса обратного вызова может кэшироваться на стороне клиента. По умолчанию 0.
-     * @param bool $showAlert Если это true, Telegram будет показывать предупреждение вместо уведомления в верхней части экрана чата. По умолчанию false.
+     *
+     * @param  string  $callbackQueryId  Уникальный идентификатор ответа на запрос
+     * @param  string  $text  Текст уведомления. Если не указан, пользователю ничего не будет показано, 0-200 символов
+     * @param  int  $cacheTime  Максимальное время в секундах, в течение которого результат запроса обратного вызова может кэшироваться на стороне
+     *     клиента. По умолчанию 0.
+     * @param  bool  $showAlert  Если это true, Telegram будет показывать предупреждение вместо уведомления в верхней части экрана чата. По умолчанию
+     *     false.
+     *
      * @return array
      */
     public function sentAnswerCallbackQuery(string $callbackQueryId, string $text, int $cacheTime = 0, bool $showAlert = true)
     {
         $this->payload = [
             'callback_query_id' => $callbackQueryId,
-            'text' => $text,
-            'show_alert' => $showAlert,
-            'cache_time' => $cacheTime
+            'text'              => $text,
+            'show_alert'        => $showAlert,
+            'cache_time'        => $cacheTime
         ];
 
         return $this->sendRequest('answerCallbackQuery', $this->payload);
