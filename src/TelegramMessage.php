@@ -28,11 +28,11 @@ class TelegramMessage extends TelegramCore
         return new self($content);
     }
 
-    public function __construct(string $content = '')
+    public function __construct(string $apikey, string $content = '')
     {
         $this->content($content);
         $this->payload['parse_mode'] = 'MarkdownV2';
-        parent::__construct();
+        parent::__construct($apikey);
     }
 
     public function content(string $content): self
@@ -63,27 +63,16 @@ class TelegramMessage extends TelegramCore
         return $this;
     }
 
-    /**
-     * !!!DEPRECATED!!!
-     * @param int $chatId
-     * @param null $botToken
-     * @return \Illuminate\Http\Client\Response
-     */
-    public function sent(int $chatId, $botToken = null) : \Illuminate\Http\Client\Response
-    {
-        $this->payload['chat_id'] = $chatId;
-        $type = isset($this->payload['photo']) ? 'sendPhoto' : 'sendMessage';
-        $type = isset($this->payload['video']) ? 'sendVideo' : $type;
-
-        return !$botToken ? $this->sendRequest($type, $this->payload) : $this->sendRequestWithBotToken($botToken, $type, $this->payload);
-    }
 
     /**
-     * @param int $chatId
-     * @param null $botToken
-     * @return \Illuminate\Http\Client\Response
+     * @param  int  $chatId
+     * @param  string|null  $botToken
+     *
+     * @return array
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramRequestException
      */
-    public function send(int $chatId, string $botToken = null) : \Illuminate\Http\Client\Response
+    public function send(int $chatId, string $botToken = null): array
     {
         $this->payload['chat_id'] = $chatId;
         $type = isset($this->payload['photo']) ? 'sendPhoto' : 'sendMessage';
