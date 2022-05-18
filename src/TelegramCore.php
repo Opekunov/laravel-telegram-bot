@@ -57,7 +57,7 @@ class TelegramCore
         ]);
 
         try {
-            $response = $client->request('POST', $uri, ['body' => $data]);
+            $response = $client->request('POST', $uri, ['body' => json_encode($data)]);
 
             $decodedResponse = json_decode($response->getBody(), true);
             if ($decodedResponse === null) {
