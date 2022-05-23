@@ -39,8 +39,11 @@ class Telegram extends TelegramCore
      * @throws Exceptions\TelegramBadTokenException
      * @throws TelegramRequestException
      */
-    public function getUpdates(): array
+    public function getUpdates(int $offset = null, int $limit = 100): array
     {
-        return $this->sendRequest('getUpdates');
+        $data = ['limit' => $limit];
+        if($offset) $data['offset'] = $offset;
+
+        return $this->sendRequest('getUpdates', $data);
     }
 }
