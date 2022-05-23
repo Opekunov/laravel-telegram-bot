@@ -32,12 +32,13 @@ class TelegramFiles extends TelegramCore
     /**
      * Get File Telegram
      *
-     * @param $fileID
+     * @param  string  $fileID
      *
      * @return array
-     * @throws TelegramRequestException
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramRequestException
      */
-    public function getFile($fileID): array
+    public function getFile(string $fileID): array
     {
         return $this->sendRequest('getFile', ['file_id' => $fileID]);
     }
@@ -45,17 +46,18 @@ class TelegramFiles extends TelegramCore
     /**
      * Финальная ссылка на файл TG
      *
-     * @param $fileID
+     * @param  string  $fileID
      *
      * @return string|null
-     * @throws TelegramRequestException
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramRequestException
      */
-    public function getFileLink($fileID)
+    public function getFileLink(string $fileID): ?string
     {
         if (!$file = $this->getFile($fileID)) return null;
         return $this->_baseUri
             . '/file/bot'
             . $this->_botToken
-            . '/' . $file['result']['file_path'] ?? null;
+            . '/' . $file['file_path'] ?? null;
     }
 }
