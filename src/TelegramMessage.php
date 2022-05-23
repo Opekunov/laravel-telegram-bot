@@ -256,4 +256,13 @@ class TelegramMessage extends TelegramCore
         return $this->sendRequest('answerCallbackQuery', $this->payload);
     }
 
+
+    public function deleteMessage(int $chatId, int $messageId, string $apiKey): array
+    {
+        return $this->sendRequestWithBotToken($apiKey, 'deleteMessage', [
+            'chat_id'    => $chatId,
+            'message_id' => $messageId
+        ]);
+    }
+
 }
