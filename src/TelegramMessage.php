@@ -1,99 +1,284 @@
 <?php
 
-
 namespace Opekunov\LaravelTelegramBot;
 
+use Opekunov\LaravelTelegramBot\Exceptions\TelegramException;
 
-class TelegramMessage extends TelegramCore
+class TelegramMessage extends Telegram
 {
+    const MAX_MESSAGE_LENGTH = 4096;
+    const MAX_CAPTION_LENGTH = 1024;
 
-    /** @var array Params payload. */
-    protected $payload = [];
+    protected array $payload = [
+        'parse_mode' => 'MarkdownV2'
+    ];
+    protected bool $isTextMessage = true;
+    protected bool $isPhoto = false;
+    protected bool $isVideo = false;
+    protected bool $isAudio = false;
 
-    /** @var array Inline Keyboard Buttons. */
-    protected $buttons = [];
-
-    public function __construct(string $apikey, string $content = '')
+    /**
+     * Create telegram message instance
+     *
+     * @param  string  $botToken
+     * @param  string|null  $baseApiUri  default is https://api.telegram.org
+     * @param  string  $botUsername
+     *
+     * @return TelegramMessage
+     * @throws TelegramException
+     */
+    public static function init(string $botToken, ?string $baseApiUri = null, string $botUsername = ''): TelegramMessage
     {
-        $this->content($content);
-        $this->payload['parse_mode'] = 'MarkdownV2';
-        parent::__construct($apikey);
+        return new self($botToken, $baseApiUri, $botUsername);
     }
 
-    public function content(string $content): self
+    /**
+     * Generate prepared inline button
+     *
+     * @param  string  $text
+     * @param  string|null  $url
+     * @param  string|null  $callbackData  1-64 bytes
+     *
+     * @return string[]
+     * @throws TelegramException
+     */
+    public static function inlineButton(string $text, string $url = null, string $callbackData = null): array
     {
+        $button = ['text' => $text];
+
+        if (is_string($callbackData) && (empty($callbackData) || strlen($callbackData) > 64)) {
+            throw new TelegramException('Callback data empty or more than 64 bytes');
+        } elseif ($callbackData) {
+            $button['callback_data'] = $callbackData;
+        }
+
+        if ($url) {
+            $button['url'] = $url;
+        }
+
+        return $button;
+    }
+
+    /**
+     * Set message text content
+     *
+     * @param  string  $content  String. 1-4096 characters
+     *
+     * @return $this
+     * @throws TelegramException
+     */
+    public function content(string $content): TelegramMessage
+    {
+        if (empty($content)) {
+            throw new TelegramException('Message content not defined');
+        }
+        $contentLength = mb_strlen($content);
+        if ($contentLength > self::MAX_MESSAGE_LENGTH) {
+            throw new TelegramException('Message text too large. Max: '.self::MAX_MESSAGE_LENGTH.'. Passed: '.$contentLength);
+        }
         $this->payload['text'] = $content;
         return $this;
     }
 
-    public static function create(string $content = ''): self
-    {
-        return new self($content);
-    }
-
-    public function getButtons()
-    {
-        return $this->payload['reply_markup']['inline_keyboard'];
-    }
-
-    public function getPayload()
-    {
-        return $this->payload;
-    }
-
-    public function photo(string $webPath, string $caption = null): self
-    {
-        $this->payload['photo'] = $webPath;
-        if ($caption) {
-            $this->payload['caption'] = $caption;
-        }
-        return $this;
-    }
-
-    public function video(string $webPath, string $caption = null): self
-    {
-        $this->payload['video'] = $webPath;
-        if ($caption) {
-            $this->payload['caption'] = $caption;
-        }
-        return $this;
-    }
-
-    public function replyTo(int $messageId)
-    {
-        $this->payload['reply_to_message_id'] = $messageId;
-        return $this;
-    }
-
-
     /**
-     * @param  int  $chatId
-     * @param  string|null  $botToken
+     * Set Chat ID for sending
      *
-     * @return array
-     * @throws Exceptions\TelegramBadTokenException
-     * @throws Exceptions\TelegramRequestException
+     * @param  int  $chatId
+     *
+     * @return $this
      */
-    public function send(int $chatId, string $botToken = null): array
+    public function sendTo(int $chatId): TelegramMessage
     {
         $this->payload['chat_id'] = $chatId;
-        $type = isset($this->payload['photo']) ? 'sendPhoto' : 'sendMessage';
-        $type = isset($this->payload['video']) ? 'sendVideo' : $type;
+        return $this;
+    }
 
-        if ($this->payload['parse_mode'] === 'MarkdownV2') {
-            $this->payload['text'] = $this->escapeMarkdown($this->payload['text']);
+    /**
+     * Send message
+     *
+     * @param  int|null  $chatId
+     *
+     * @return array
+     * @throws TelegramException
+     */
+    public function send(int $chatId = null): array
+    {
+        if (empty($this->payload['chat_id']) && empty($chatId)) {
+            throw new TelegramException('Chat ID not defined');
+        } elseif ($chatId) {
+            $this->payload['chat_id'] = $chatId;
         }
+        $this->escapeByParseMode();
 
         if (isset($this->payload['reply_markup'])) {
             $this->payload['reply_markup'] = json_encode($this->payload['reply_markup']);
         }
 
-        return !$botToken ? $this->sendRequest($type, $this->payload) : $this->sendRequestWithBotToken($botToken, $type, $this->payload);
+        if ($this->isPhoto) {
+            return $this->sendPhoto();
+        } elseif ($this->isVideo) {
+            return $this->sendVideo();
+        } else {
+            return $this->sendMessage();
+        }
     }
 
-    private function escapeMarkdown(string $string)
+    /**
+     * Escape text data by parse mode
+     *
+     * @return void
+     */
+    private function escapeByParseMode()
     {
-        return preg_replace('/[_*\[\]()~`>#+-=|{}.!]{1}/is', '\\\$0', $string);
+        if ($this->payload['parse_mode'] === 'MarkdownV2') {
+            if (isset($this->payload['text'])) {
+                $this->payload['text'] = $this->escapeMarkdownV2($this->payload['text']);
+            } elseif (isset($this->payload['caption'])) {
+                $this->payload['caption'] = $this->escapeMarkdownV2($this->payload['caption']);
+            }
+        }
+    }
+
+    /**
+     * Escape markdown (v2) special characters
+     *
+     * @see https://core.telegram.org/bots/api#markdownv2-style
+     *
+     * @param  string  $string
+     *
+     * @author https://github.com/noplanman
+     *
+     * @return string
+     */
+    private function escapeMarkdownV2(string $string): string
+    {
+        return str_replace(
+            ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!'],
+            ['\_', '\*', '\[', '\]', '\(', '\)', '\~', '\`', '\>', '\#', '\+', '\-', '\=', '\|', '\{', '\}', '\.', '\!'],
+            $string
+        );
+    }
+
+    /**
+     * Send Photo
+     *
+     * @see https://core.telegram.org/bots/api#sendmessage
+     * @return array
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramRequestException
+     */
+    protected function sendPhoto(): array
+    {
+        return $this->sendRequest('sendPhoto', $this->payload);
+    }
+
+    /**
+     * Send Video
+     *
+     * @see https://core.telegram.org/bots/api#sendmessage
+     * @return array
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramRequestException
+     */
+    protected function sendVideo(): array
+    {
+        return $this->sendRequest('sendVideo', $this->payload);
+    }
+
+    /**
+     * Send Message
+     *
+     * @see https://core.telegram.org/bots/api#sendmessage
+     * @return array
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramRequestException
+     */
+    protected function sendMessage(): array
+    {
+        return $this->sendRequest('sendMessage', $this->payload);
+    }
+
+    /**
+     * Add one row of ReplyButtons
+     *
+     * @param  array<array>  $buttons  For example:
+     * [
+     *  ['text' => 'Button 1'],
+     *  ['text' => 'Button 2'],
+     * ]
+     *
+     * @return $this
+     */
+    public function addReplyButtonsRow(array $buttons): TelegramMessage
+    {
+        if (!isset($this->payload['reply_markup'])) {
+            $this->payload['reply_markup'] = ['resize_keyboard' => true, 'keyboard' => [$buttons]];
+        } else {
+            if (is_string($this->payload['reply_markup'])) {
+                $this->payload['reply_markup'] = json_decode($this->payload['reply_markup'], true);
+            }
+            $this->payload['reply_markup']['resize_keyboard'] = true;
+            $this->payload['reply_markup']['keyboard'][] = $buttons;
+        }
+        return $this;
+    }
+
+    /**
+     * Clear reply markup rows
+     *
+     * @return $this
+     */
+    public function clearReplyMarkupRows(): TelegramMessage
+    {
+        $this->payload['reply_markup'] = ['keyboard' => []];
+        return $this;
+    }
+
+    /**
+     * Remove keyboard from chat
+     *
+     * @param  int  $messageId
+     * @param  int|null  $chatId
+     *
+     * @return array
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramRequestException
+     * @throws TelegramException
+     */
+    public function removeReplyMarkup(int $messageId, int $chatId = null): array
+    {
+        $this->payload['reply_markup'] = ['remove_keyboard' => true];
+        return $this->editReplyMarkup($messageId, $chatId);
+    }
+
+    /**
+     * Use this method to edit only the reply markup of messages. On success, if the edited message
+     * is not an inline message, the edited Message is returned, otherwise True is returned.
+     *
+     * @see https://core.telegram.org/bots/api#editmessagereplymarkup
+     *
+     * @param  int  $messageId
+     * @param  int|null  $chatId
+     *
+     * @return array
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramRequestException
+     * @throws TelegramException
+     */
+    public function editReplyMarkup(int $messageId, int $chatId = null): array
+    {
+        //todo: Error 400 Message cannot be edited
+
+        if (empty($this->payload['chat_id']) && empty($chatId)) {
+            throw new TelegramException('Chat ID not defined');
+        }
+        $chatId = $chatId ?? $this->payload['chat_id'];
+
+        return $this->sendRequest('editMessageReplyMarkup', [
+            'chat_id'      => $chatId,
+            'message_id'   => $messageId,
+            'reply_markup' => json_encode($this->payload['reply_markup'])
+        ]);
     }
 
     /**
@@ -119,61 +304,103 @@ class TelegramMessage extends TelegramCore
     }
 
     /**
-     * Disable parse mode
+     * Add photo
      *
-     * @return $this
+     * @param  string  $photoUrlOrFileId
+     *
+     * @return TelegramMessage
+     * @throws TelegramException
      */
-    public function disableParseMode()
+    public function photo(string $photoUrlOrFileId): TelegramMessage
     {
-        unset($this->payload['parse_mode']);
+        $this->isPhoto = true;
+        $this->payload['photo'] = $photoUrlOrFileId;
+        $this->contentToCaption();
         return $this;
     }
 
     /**
-     * MarkdownV2 style
-     *
-     * @see https://core.telegram.org/bots/api#markdownv2-style
-     * @return $this
+     * @return void
+     * @throws TelegramException
      */
-    public function setMarkdownV2ParseMode(): TelegramMessage
+    private function contentToCaption(): void
     {
-        $this->payload['parse_mode'] = 'MarkdownV2';
+        if (isset($this->payload['text'])) {
+            $this->caption(mb_substr($this->payload['text'], 0, self::MAX_CAPTION_LENGTH));
+            unset($this->payload['text']);
+        }
+    }
+
+    /**
+     * Set document text caption
+     *
+     * @param  string  $caption  0-1024 characters
+     *
+     * @return $this
+     * @throws TelegramException
+     */
+    public function caption(string $caption): TelegramMessage
+    {
+        if (empty($caption)) {
+            throw new TelegramException('Message content not defined');
+        }
+        $contentLength = mb_strlen($caption);
+        if ($contentLength > self::MAX_CAPTION_LENGTH) {
+            throw new TelegramException('Caption text too large. Max: '.self::MAX_MESSAGE_LENGTH.'. Passed: '.$contentLength);
+        }
+        $this->payload['caption'] = $caption;
         return $this;
     }
 
     /**
-     * HTML Style
-     * https://core.telegram.org/bots/api#html-style
+     * Add video
      *
-     * @return $this
+     * @param  string  $photoUrlOrFileId
+     *
+     * @return TelegramMessage
+     * @throws TelegramException
      */
-    public function setHTMLParseMode(): TelegramMessage
+    public function video(string $videoUrlOrFileId): TelegramMessage
     {
-        $this->payload['parse_mode'] = 'html';
+        $this->isVideo = true;
+        $this->payload['video'] = $videoUrlOrFileId;
+        $this->contentToCaption();
         return $this;
     }
 
-
     /**
-     * @param  int  $chatId
-     * @param  string  $stickerPath
+     * Use this method to send a group of photos, videos, documents or audios as an album. Documents and audio files can be only grouped
+     * in an album with messages of the same type. On success, an array of Messages that were sent is returned
+     *
+     * @see https://core.telegram.org/bots/api#sendmediagroup
+     *
+     * @param  array  $items  must include 2-10 items
      *
      * @return array
-     * @throws Exceptions\TelegramBadTokenException
-     * @throws Exceptions\TelegramRequestException
+     * @throws TelegramException
      */
-    public function sendSticker(int $chatId, string $stickerPath): array
+    public function sendMediaGroup(array $items): array
     {
-        $this->payload['chat_id'] = $chatId;
-        $this->payload['sticker'] = $stickerPath;
-        $type = 'sendSticker';
+        $itemsCount = count($items);
+        if ($itemsCount < 2 || $itemsCount > 10) {
+            throw new TelegramException("Media Group must include 2-10 items. $itemsCount passed");
+        }
 
-        return $this->sendRequest($type, $this->payload);
+        if (isset($this->payload['caption'])) {
+            $items[0]['caption'] = $this->payload['caption'];
+        }
+        $this->payload['media'] = json_encode($items);
+
+        return $this->sendRequest('sendMediaGroup', $this->payload);
     }
 
-    public function addButtonsRow(array $buttons)
+    /**
+     * @param  array<array>  $buttons
+     *
+     * @return $this
+     */
+    public function addInlineButtonRow(array $buttons): TelegramMessage
     {
-        //inline_keyboard
         if (!isset($this->payload['reply_markup'])) {
             $this->payload['reply_markup'] = ['inline_keyboard' => [$buttons]];
         } else {
@@ -182,87 +409,16 @@ class TelegramMessage extends TelegramCore
         return $this;
     }
 
-    public function addDefaultReplyKeyboard()
+    /**
+     * ID of the replied message
+     *
+     * @param  int  $messageId
+     *
+     * @return $this
+     */
+    public function replyTo(int $messageId): TelegramMessage
     {
-        return $this->addReplyButtonsRow([
-            ['text' => 'Мои баллы'],
-            ['text' => 'Баллы команды'],
-        ])
-            ->addReplyButtonsRow([
-                [
-                    'text' => 'Перейти на сайт',
-                ]
-            ]);
-    }
-
-    public function addReplyButtonsRow(array $buttons)
-    {
-        //inline_keyboard
-        if (!isset($this->payload['reply_markup'])) {
-            $this->payload['reply_markup'] = ['resize_keyboard' => true, 'keyboard' => [$buttons]];
-        } else {
-            $this->payload['reply_markup']['resize_keyboard'] = true;
-            $this->payload['reply_markup']['keyboard'][] = $buttons;
-        }
+        $this->payload['reply_to_message_id'] = $messageId;
         return $this;
     }
-
-    public function sendTypingAction(int $chatId)
-    {
-        return $this->sendChatAction('typing', $chatId);
-    }
-
-    public function sendChatAction(string $action, int $chatId)
-    {
-        $this->payload = [
-            'chat_id' => $chatId,
-            'action'  => $action
-        ];
-        return $this->sendRequest('sendChatAction', $this->payload);
-    }
-
-    public function updateButtons(int $messageId, int $chatId)
-    {
-        $this->payload = [
-            'reply_markup' => $this->payload['reply_markup'],
-            'chat_id'      => $chatId,
-            'message_id'   => $messageId
-        ];
-        return $this->sendRequest('editMessageReplyMarkup', $this->payload);
-    }
-
-    /**
-     * Используйте этот метод для отправки ответов на запросы обратного вызова, отправленные с встроенных клавиатур.
-     * Ответ будет отображаться пользователю в виде уведомления в верхней части экрана чата или в виде предупреждения.
-     *
-     * @param  string  $callbackQueryId  Уникальный идентификатор ответа на запрос
-     * @param  string  $text  Текст уведомления. Если не указан, пользователю ничего не будет показано, 0-200 символов
-     * @param  int  $cacheTime  Максимальное время в секундах, в течение которого результат запроса обратного вызова может кэшироваться на стороне
-     *     клиента. По умолчанию 0.
-     * @param  bool  $showAlert  Если это true, Telegram будет показывать предупреждение вместо уведомления в верхней части экрана чата. По умолчанию
-     *     false.
-     *
-     * @return array
-     */
-    public function sentAnswerCallbackQuery(string $callbackQueryId, string $text, int $cacheTime = 0, bool $showAlert = true)
-    {
-        $this->payload = [
-            'callback_query_id' => $callbackQueryId,
-            'text'              => $text,
-            'show_alert'        => $showAlert,
-            'cache_time'        => $cacheTime
-        ];
-
-        return $this->sendRequest('answerCallbackQuery', $this->payload);
-    }
-
-
-    public function deleteMessage(int $chatId, int $messageId, string $apiKey): array
-    {
-        return $this->sendRequestWithBotToken($apiKey, 'deleteMessage', [
-            'chat_id'    => $chatId,
-            'message_id' => $messageId
-        ]);
-    }
-
 }

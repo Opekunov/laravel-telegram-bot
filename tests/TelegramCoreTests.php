@@ -5,7 +5,10 @@ use Opekunov\LaravelTelegramBot\Exceptions\TelegramBadTokenException;
 use Opekunov\LaravelTelegramBot\Telegram;
 use Opekunov\LaravelTelegramBot\TelegramHandler;
 use PHPUnit\Framework\TestCase;
-
+/**
+ * DEPRECATED
+ * //TODO: REMOVE
+ */
 class TelegramCoreTests extends TestCase
 {
     private Telegram $tg;
@@ -30,6 +33,8 @@ class TelegramCoreTests extends TestCase
     public function getUpdates()
     {
         $res = $this->tgHandler->getUpdates();
+        $parser = $this->tgHandler->handle($res[0]);
+        print_r($parser->getChat());
 
 
         $this->assertIsArray($res);
