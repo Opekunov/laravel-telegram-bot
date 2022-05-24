@@ -61,7 +61,7 @@ class TelegramRequest
     const CHANNEL_POST = 'channel_post';
 
     protected array $data;
-    protected int $updateId;
+    protected ?int $updateId;
 
     /**
      * @param  array  $updateData
@@ -70,11 +70,7 @@ class TelegramRequest
      */
     public function __construct(array $updateData)
     {
-        if (!isset($updateData['update_id'])) {
-            throw new TelegramException('Update data hasn\'t update_id');
-        }
-
-        $this->updateId = $updateData['update_id'];
+        $this->updateId = @$updateData['update_id'];
         $this->data = $updateData;
     }
 
