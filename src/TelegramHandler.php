@@ -9,7 +9,7 @@ class TelegramHandler extends Telegram
     private TelegramParser $parser;
 
     /**
-     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramTooManyRequestsException
      * @throws Exceptions\TelegramRequestException
      */
     public function handleUpdates()

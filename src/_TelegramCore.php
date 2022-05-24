@@ -7,9 +7,13 @@ namespace Opekunov\LaravelTelegramBot;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
-use Opekunov\LaravelTelegramBot\Exceptions\TelegramBadTokenException;
+use Opekunov\LaravelTelegramBot\Exceptions\TelegramTooManyRequestsException;
 use Opekunov\LaravelTelegramBot\Exceptions\TelegramRequestException;
 
+/**
+ * DEPRECATED
+ * //TODO: REMOVE
+ */
 class TelegramCore
 {
     protected string $_botToken;
@@ -28,7 +32,7 @@ class TelegramCore
      * @param  array  $data  Дата
      *
      * @throws TelegramRequestException
-     * @throws TelegramBadTokenException
+     * @throws TelegramTooManyRequestsException
      */
     protected function sendRequest(string $endPoint, array $data = []): array
     {
@@ -44,7 +48,7 @@ class TelegramCore
      *
      * @return array
      * @throws TelegramRequestException
-     * @throws TelegramBadTokenException
+     * @throws TelegramTooManyRequestsException
      */
     protected function sendRequestWithBotToken(string $botToken, string $endPoint, array $data = []): array
     {
@@ -67,7 +71,7 @@ class TelegramCore
             }
         } catch (RequestException $e) {
             if ($e->getResponse()->getStatusCode() === 404) {
-                throw new TelegramBadTokenException('Bad token. Response body: '.$e->getResponse()->getBody());
+                throw new TelegramTooManyRequestsException('Bad token. Response body: '.$e->getResponse()->getBody());
             } else {
                 throw new TelegramRequestException($e->getMessage(), $e->getCode(), $e->getPrevious());
             }

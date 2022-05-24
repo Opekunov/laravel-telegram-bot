@@ -12,6 +12,7 @@ class TelegramMessage extends Telegram
     protected array $payload = [
         'parse_mode' => 'MarkdownV2'
     ];
+
     protected bool $isTextMessage = true;
     protected bool $isPhoto = false;
     protected bool $isVideo = false;
@@ -164,7 +165,7 @@ class TelegramMessage extends Telegram
      *
      * @see https://core.telegram.org/bots/api#sendmessage
      * @return array
-     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramTooManyRequestsException
      * @throws Exceptions\TelegramRequestException
      */
     protected function sendPhoto(): array
@@ -177,7 +178,7 @@ class TelegramMessage extends Telegram
      *
      * @see https://core.telegram.org/bots/api#sendmessage
      * @return array
-     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramTooManyRequestsException
      * @throws Exceptions\TelegramRequestException
      */
     protected function sendVideo(): array
@@ -190,7 +191,7 @@ class TelegramMessage extends Telegram
      *
      * @see https://core.telegram.org/bots/api#sendmessage
      * @return array
-     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramTooManyRequestsException
      * @throws Exceptions\TelegramRequestException
      */
     protected function sendMessage(): array
@@ -241,7 +242,7 @@ class TelegramMessage extends Telegram
      * @param  int|null  $chatId
      *
      * @return array
-     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramTooManyRequestsException
      * @throws Exceptions\TelegramRequestException
      * @throws TelegramException
      */
@@ -261,7 +262,7 @@ class TelegramMessage extends Telegram
      * @param  int|null  $chatId
      *
      * @return array
-     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramTooManyRequestsException
      * @throws Exceptions\TelegramRequestException
      * @throws TelegramException
      */
@@ -410,15 +411,17 @@ class TelegramMessage extends Telegram
     }
 
     /**
-     * ID of the replied message
+     * Use this method to send reply
      *
-     * @param  int  $messageId
+     * @param  int  $messageId  If the message is a reply, ID of the original message
+     * @param  bool  $allowSendingWithoutReply  Pass True, if the message should be sent even if the specified replied-to message is not found
      *
      * @return $this
      */
-    public function replyTo(int $messageId): TelegramMessage
+    public function replyTo(int $messageId, bool $allowSendingWithoutReply = true): TelegramMessage
     {
         $this->payload['reply_to_message_id'] = $messageId;
+        $this->payload['allow_sending_without_reply'] = $allowSendingWithoutReply;
         return $this;
     }
 }

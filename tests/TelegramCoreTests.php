@@ -1,7 +1,7 @@
 <?php
 
 use Dotenv\Dotenv;
-use Opekunov\LaravelTelegramBot\Exceptions\TelegramBadTokenException;
+use Opekunov\LaravelTelegramBot\Exceptions\TelegramTooManyRequestsException;
 use Opekunov\LaravelTelegramBot\Telegram;
 use Opekunov\LaravelTelegramBot\TelegramHandler;
 use PHPUnit\Framework\TestCase;
@@ -17,7 +17,7 @@ class TelegramCoreTests extends TestCase
     /** @test */
     public function badToken()
     {
-        $this->expectException(TelegramBadTokenException::class);
+        $this->expectException(TelegramTooManyRequestsException::class);
         $tg = new Telegram('1234567');
         $tg->getMe();
     }

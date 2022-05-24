@@ -74,7 +74,7 @@ class _TelegramMessage extends TelegramCore
      * @param  string|null  $botToken
      *
      * @return array
-     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramTooManyRequestsException
      * @throws Exceptions\TelegramRequestException
      */
     public function send(int $chatId, string $botToken = null): array
@@ -162,7 +162,7 @@ class _TelegramMessage extends TelegramCore
      * @param  string  $stickerPath
      *
      * @return array
-     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramTooManyRequestsException
      * @throws Exceptions\TelegramRequestException
      */
     public function sendSticker(int $chatId, string $stickerPath): array

@@ -14,7 +14,7 @@ class _Telegram extends TelegramCore
      * Получить данные о боте
      *
      * @return array
-     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramTooManyRequestsException
      * @throws TelegramRequestException
      */
     public function getMe(): array
@@ -32,7 +32,7 @@ class _Telegram extends TelegramCore
      *
      * @return array
      * @throws TelegramRequestException
-     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramTooManyRequestsException
      */
     public function setWebhook(string $token, string $url, int $maxConnections = 50): array
     {
@@ -40,7 +40,7 @@ class _Telegram extends TelegramCore
     }
 
     /**
-     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramTooManyRequestsException
      * @throws TelegramRequestException
      */
     public function getUpdates(int $offset = null, int $limit = 100): array
