@@ -245,7 +245,7 @@ class TelegramRequest
      */
     public function replyToMessageID(): ?int
     {
-        return $this->data['message']['reply_to_message']['message_id'];
+        return @$this->data['message']['reply_to_message']['message_id'];
     }
 
     /**
@@ -281,11 +281,11 @@ class TelegramRequest
     /**
      * Get the callback_query id of the current update
      *
-     * @return string callback_query id.
+     * @return int|null callback_query id.
      */
-    public function callbackID(): string
+    public function callbackID(): ?int
     {
-        return $this->data['callback_query']['id'];
+        return @$this->data['callback_query']['id'];
     }
 
     /**
@@ -413,6 +413,16 @@ class TelegramRequest
     public function chat(): array
     {
         return @$this->data['message']['chat'];
+    }
+
+    /**
+     * Get Chat data
+     *
+     * @return array
+     */
+    public function message(): array
+    {
+        return @$this->data['message'];
     }
 
     /**
