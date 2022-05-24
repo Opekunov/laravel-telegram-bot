@@ -31,16 +31,17 @@ class Telegram
     {
         if (function_exists('config')) {
             $botToken = $botToken ?? config('telegram.token');
-            $baseApiUri = $baseApiUri ?? config('telegram.token') ?? $this->baseApiUri;
+            $baseApiUri = $baseApiUri ?? config('telegram.base_uri') ?? $this->baseApiUri;
+            $botUsername = empty($botUsername) ? config('telegram.name') : $botUsername;
         }
 
-        if ((is_string($baseApiUri) && empty($baseApiUri)) || empty($botToken)) {
-            throw new TelegramException('API Uri or Bot Token not defined');
+        if (!filter_var($baseApiUri, FILTER_VALIDATE_URL)) {
+            throw new TelegramException('API Uri Bad or not defined');
         }
 
         preg_match('/(\d+):[\w\-]+/', $botToken, $matches);
-        if (!isset($matches[1])) {
-            throw new TelegramException('Invalid Bot Token defined!');
+        if (empty($botToken) || !isset($matches[1])) {
+            throw new TelegramException('Invalid Bot Token defined');
         }
 
         $this->botId = (int)$matches[1];
