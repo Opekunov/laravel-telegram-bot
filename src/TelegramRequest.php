@@ -396,6 +396,26 @@ class TelegramRequest
     }
 
     /**
+     * Get from User data
+     *
+     * @return array|null
+     */
+    public function from(): ?array
+    {
+        return @$this->data['message']['from'];
+    }
+
+    /**
+     * Get Chat data
+     *
+     * @return array
+     */
+    public function chat(): array
+    {
+        return @$this->data['message']['char'];
+    }
+
+    /**
      * Get the username of the user
      *
      * @return string|null
