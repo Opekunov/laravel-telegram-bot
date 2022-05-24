@@ -71,7 +71,7 @@ class TelegramRequest
     public function __construct(array $updateData)
     {
         $this->updateId = @$updateData['update_id'];
-        $this->data = $updateData;
+        $this->data = isset($updateData['message']) ? $updateData : ['message' => $updateData];
     }
 
     public function __call($name, $arguments)
