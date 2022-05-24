@@ -412,7 +412,7 @@ class TelegramRequest
      */
     public function chat(): array
     {
-        return @$this->data['message']['char'];
+        return @$this->data['message']['chat'];
     }
 
     /**
