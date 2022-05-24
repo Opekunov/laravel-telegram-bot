@@ -455,9 +455,9 @@ class TelegramRequest
     /**
      * Get the update_id of the message
      *
-     * @return int
+     * @return int|null
      */
-    public function updateID(): int
+    public function updateID(): ?int
     {
         return $this->updateId;
     }
