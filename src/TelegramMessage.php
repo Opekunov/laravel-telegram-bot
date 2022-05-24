@@ -200,6 +200,23 @@ class TelegramMessage extends Telegram
     }
 
     /**
+     * Delete message
+     *
+     * @see https://core.telegram.org/bots/api#deletemessage
+     *
+     * @param  int  $chatId
+     * @param  int  $messageId
+     *
+     * @return array
+     * @throws Exceptions\TelegramRequestException
+     * @throws Exceptions\TelegramTooManyRequestsException
+     */
+    protected function deleteMessage(int $chatId, int $messageId): array
+    {
+        return $this->sendRequest('deleteMessage', ['chat_id' => $chatId, 'message_id' => $messageId]);
+    }
+
+    /**
      * Add one row of ReplyButtons
      *
      * @param  array<array>  $buttons  For example:
