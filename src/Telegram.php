@@ -21,14 +21,19 @@ class Telegram
     /**
      * Create a Telegram instance from the bot token
      *
-     * @param  string  $botToken
+     * @param  string|null  $botToken
      * @param  string|null  $baseApiUri  default is https://api.telegram.org
      * @param  string  $botUsername
      *
      * @throws TelegramException
      */
-    public function __construct(string $botToken, ?string $baseApiUri = null, string $botUsername = '')
+    public function __construct(string $botToken = null, ?string $baseApiUri = null, string $botUsername = '')
     {
+        if (function_exists('config')) {
+            $botToken = $botToken ?? config('telegram.token');
+            $baseApiUri = $baseApiUri ?? config('telegram.token') ?? $this->baseApiUri;
+        }
+
         if ((is_string($baseApiUri) && empty($baseApiUri)) || empty($botToken)) {
             throw new TelegramException('API Uri or Bot Token not defined');
         }

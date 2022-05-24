@@ -21,14 +21,14 @@ class TelegramMessage extends Telegram
     /**
      * Create telegram message instance
      *
-     * @param  string  $botToken
+     * @param  string|null  $botToken
      * @param  string|null  $baseApiUri  default is https://api.telegram.org
      * @param  string  $botUsername
      *
      * @return TelegramMessage
      * @throws TelegramException
      */
-    public static function init(string $botToken, ?string $baseApiUri = null, string $botUsername = ''): TelegramMessage
+    public static function init(string $botToken = null, ?string $baseApiUri = null, string $botUsername = ''): TelegramMessage
     {
         return new self($botToken, $baseApiUri, $botUsername);
     }
