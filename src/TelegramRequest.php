@@ -692,13 +692,16 @@ class TelegramRequest
     }
 
     /**
+     * //TODO: TESTS
      * Get photo ID
      *
      * @return array|null
      */
     public function photoFileID(): ?string
     {
-        return @end(@$this->data['message']['photo'])['file_id'];
+        $photo = $this->photo();
+        if(!$photo) return null;
+        return end($photo)['file_id'];
     }
 
     /**
