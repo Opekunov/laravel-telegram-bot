@@ -558,4 +558,248 @@ class TelegramRequest
 
         return '';
     }
+
+
+    /**
+     * Get document
+     *
+     * @return array|null
+     */
+    public function document(): ?array
+    {
+        return @$this->data['message']['document'];
+    }
+
+    /**
+     * Get document file ID
+     *
+     * @return array|null
+     */
+    public function documentFileID(): ?string
+    {
+        return @$this->data['message']['document']['file_id'];
+    }
+
+    /**
+     * Get video
+     *
+     * @return array|null
+     */
+    public function video(): ?array
+    {
+        return @$this->data['message']['video'];
+    }
+
+    /**
+     * Get document video ID
+     *
+     * @return array|null
+     */
+    public function videoFileID(): ?string
+    {
+        return @$this->data['message']['video']['file_id'];
+    }
+
+    /**
+     * Get video thumb ID
+     *
+     * @return array|null
+     */
+    public function videoThumb(): ?array
+    {
+        return @$this->data['message']['video']['thumb'];
+    }
+
+    /**
+     * Get video thumb ID
+     *
+     * @return array|null
+     */
+    public function videoThumbFileID(): ?string
+    {
+        return @$this->data['message']['video']['thumb']['file_id'];
+    }
+
+    /**
+     * Get animation
+     *
+     * @return array|null
+     */
+    public function animation(): ?array
+    {
+        return @$this->data['message']['animation'];
+    }
+
+    /**
+     * Get animation ID
+     *
+     * @return array|null
+     */
+    public function animationFileID(): ?string
+    {
+        return @$this->data['message']['animation']['file_id'];
+    }
+
+    /**
+     * Get animation thumb ID
+     *
+     * @return array|null
+     */
+    public function animationThumb(): ?array
+    {
+        return @$this->data['message']['animation']['thumb'];
+    }
+
+    /**
+     * Get animation thumb ID
+     *
+     * @return array|null
+     */
+    public function animationThumbFileID(): ?string
+    {
+        return @$this->data['message']['animation']['thumb']['file_id'];
+    }
+
+    /**
+     * Get audio
+     *
+     * @return array|null
+     */
+    public function audio(): ?array
+    {
+        return @$this->data['message']['audio'];
+    }
+
+    /**
+     * Get document animation ID
+     *
+     * @return array|null
+     */
+    public function audioFileID(): ?string
+    {
+        return @$this->data['message']['audio']['file_id'];
+    }
+
+
+    /**
+     * Get photo
+     *
+     * @return array|null
+     */
+    public function photo(): ?array
+    {
+        return @$this->data['message']['photo'];
+    }
+
+    /**
+     * Get photo ID
+     *
+     * @return array|null
+     */
+    public function photoFileID(): ?string
+    {
+        return @end(@$this->data['message']['photo'])['file_id'];
+    }
+
+    /**
+     * Get voice
+     *
+     * @return array|null
+     */
+    public function voice(): ?array
+    {
+        return @$this->data['message']['voice'];
+    }
+
+    /**
+     * Get voice ID
+     *
+     * @return array|null
+     */
+    public function voiceFileID(): ?string
+    {
+        return @$this->data['message']['voice']['file_id'];
+    }
+
+    /**
+     * Get video_note
+     *
+     * @return array|null
+     */
+    public function videoNote(): ?array
+    {
+        return @$this->data['message']['video_note'];
+    }
+
+    /**
+     * Get video_note ID
+     *
+     * @return array|null
+     */
+    public function videoNoteFileID(): ?string
+    {
+        return @$this->data['message']['video_note']['file_id'];
+    }
+
+    /**
+     * Get video_note thumb ID
+     *
+     * @return array|null
+     */
+    public function videoNoteThumb(): ?array
+    {
+        return @$this->data['message']['video_note']['thumb'];
+    }
+
+    /**
+     * Get video_note thumb ID
+     *
+     * @return array|null
+     */
+    public function videoNoteThumbFileID(): ?string
+    {
+        return @$this->data['message']['video_note']['thumb']['file_id'];
+    }
+
+    /**
+     * Get sticker
+     *
+     * @return array|null
+     */
+    public function sticker(): ?array
+    {
+        return @$this->data['message']['sticker'];
+    }
+
+    /**
+     * Get sticker ID
+     *
+     * @return array|null
+     */
+    public function stickerFileID(): ?string
+    {
+        return @$this->data['message']['sticker']['file_id'];
+    }
+
+    /**
+     * Get sticker thumb
+     *
+     * @return array|null
+     */
+    public function stickerThumb(): ?array
+    {
+        return @$this->data['message']['sticker']['thumb'];
+    }
+
+    /**
+     * Get sticker thumb ID
+     *
+     * @return array|null
+     */
+    public function stickerThumbFileID(): ?string
+    {
+        return @$this->data['message']['sticker']['thumb']['file_id'];
+    }
+
+
 }

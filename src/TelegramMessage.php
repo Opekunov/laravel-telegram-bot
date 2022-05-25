@@ -354,9 +354,41 @@ class TelegramMessage extends Telegram
     }
 
     /**
+     * Add animation
+     *
+     * @param  string  $animationUrlOrFileId
+     *
+     * @return TelegramMessage
+     * @throws TelegramException
+     */
+    public function animation(string $animationUrlOrFileId): TelegramMessage
+    {
+        $this->isPhoto = true;
+        $this->payload['animation'] = $animationUrlOrFileId;
+        $this->contentToCaption();
+        return $this;
+    }
+
+    /**
+     * Add document
+     *
+     * @param  string  $documentUrlOrFileId
+     *
+     * @return TelegramMessage
+     * @throws TelegramException
+     */
+    public function document(string $documentUrlOrFileId): TelegramMessage
+    {
+        $this->isPhoto = true;
+        $this->payload['document'] = $documentUrlOrFileId;
+        $this->contentToCaption();
+        return $this;
+    }
+
+    /**
      * Add video
      *
-     * @param  string  $photoUrlOrFileId
+     * @param  string  $videoUrlOrFileId
      *
      * @return TelegramMessage
      * @throws TelegramException
