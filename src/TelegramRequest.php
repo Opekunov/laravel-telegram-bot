@@ -192,7 +192,7 @@ class TelegramRequest
     /**
      * Get the chat_id of the current message
      *
-     * @return int|null users's chat_id.
+     * @return int|null user's chat_id.
      */
     public function chatID(): ?int
     {
