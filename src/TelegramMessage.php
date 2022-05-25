@@ -17,6 +17,8 @@ class TelegramMessage extends Telegram
     protected bool $isPhoto = false;
     protected bool $isVideo = false;
     protected bool $isAudio = false;
+    private bool $isAnimation = false;
+    private bool $isDocument = false;
 
     /**
      * Create telegram message instance
@@ -119,6 +121,10 @@ class TelegramMessage extends Telegram
             return $this->sendPhoto();
         } elseif ($this->isVideo) {
             return $this->sendVideo();
+        } elseif ($this->isAnimation) {
+            return $this->sendAnimation();
+        } elseif ($this->isDocument) {
+            return $this->sendDocument();
         } else {
             return $this->sendMessage();
         }
@@ -163,7 +169,7 @@ class TelegramMessage extends Telegram
     /**
      * Send Photo
      *
-     * @see https://core.telegram.org/bots/api#sendmessage
+     * @see https://core.telegram.org/bots/api#sendphoto
      * @return array
      * @throws Exceptions\TelegramTooManyRequestsException
      * @throws Exceptions\TelegramRequestException
@@ -176,12 +182,38 @@ class TelegramMessage extends Telegram
     /**
      * Send Video
      *
-     * @see https://core.telegram.org/bots/api#sendmessage
+     * @see https://core.telegram.org/bots/api#sendvideo
      * @return array
      * @throws Exceptions\TelegramTooManyRequestsException
      * @throws Exceptions\TelegramRequestException
      */
     protected function sendVideo(): array
+    {
+        return $this->sendRequest('sendVideo', $this->payload);
+    }
+
+    /**
+     * Send Animation
+     *
+     * @see https://core.telegram.org/bots/api#sendanimation
+     * @return array
+     * @throws Exceptions\TelegramTooManyRequestsException
+     * @throws Exceptions\TelegramRequestException
+     */
+    protected function sendAnimation(): array
+    {
+        return $this->sendRequest('sendVideo', $this->payload);
+    }
+
+    /**
+     * Send Document
+     *
+     * @see https://core.telegram.org/bots/api#senddocument
+     * @return array
+     * @throws Exceptions\TelegramTooManyRequestsException
+     * @throws Exceptions\TelegramRequestException
+     */
+    protected function sendDocument(): array
     {
         return $this->sendRequest('sendVideo', $this->payload);
     }
@@ -363,7 +395,7 @@ class TelegramMessage extends Telegram
      */
     public function animation(string $animationUrlOrFileId): TelegramMessage
     {
-        $this->isPhoto = true;
+        $this->isAnimation = true;
         $this->payload['animation'] = $animationUrlOrFileId;
         $this->contentToCaption();
         return $this;
@@ -379,7 +411,7 @@ class TelegramMessage extends Telegram
      */
     public function document(string $documentUrlOrFileId): TelegramMessage
     {
-        $this->isPhoto = true;
+        $this->isDocument = true;
         $this->payload['document'] = $documentUrlOrFileId;
         $this->contentToCaption();
         return $this;
