@@ -167,9 +167,9 @@ class TelegramRequest
     /**
      * Get the text of the current message
      *
-     * @return string the String users's text.
+     * @return ?string the String users's text.
      */
-    public function text(): string
+    public function text(): ?string
     {
         $type = $this->getUpdateType();
         if ($type == self::CALLBACK_QUERY) {
