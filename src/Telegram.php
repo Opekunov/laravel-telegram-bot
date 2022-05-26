@@ -33,6 +33,7 @@ class Telegram
             $botToken = $botToken ?? config('telegram.token');
             $baseApiUri = $baseApiUri ?? config('telegram.base_uri') ?? $this->baseApiUri;
             $botUsername = empty($botUsername) ? config('telegram.name') : $botUsername;
+            $this->timeout = config('telegram.timeout') ?? $this->timeout;
         }
 
         if (!filter_var($baseApiUri, FILTER_VALIDATE_URL)) {

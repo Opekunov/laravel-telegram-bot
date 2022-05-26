@@ -145,7 +145,7 @@ class TelegramRequest
         if (isset($update['channel_post'])) {
             return self::CHANNEL_POST;
         }
-        if (isset($update['video_note'])) {
+        if (isset($update['message']['video_note'])) {
             return self::VIDEO_NOTE;
         }
 
