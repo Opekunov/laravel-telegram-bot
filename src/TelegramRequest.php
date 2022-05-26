@@ -17,6 +17,7 @@ use Opekunov\LaravelTelegramBot\Exceptions\TelegramException;
  * @method bool isVideo()
  * @method bool isAudio()
  * @method bool isVoice()
+ * @method bool isVideoNote()
  * @method bool isAnimation()
  * @method bool isSticker()
  * @method bool isDocument()
@@ -59,6 +60,8 @@ class TelegramRequest
     const CONTACT = 'contact';
     /**  Constant for type Channel Post. */
     const CHANNEL_POST = 'channel_post';
+    /**  Constant for type Video note. */
+    const VIDEO_NOTE = 'video_note';
 
     protected array $data;
     protected ?int $updateId;
@@ -141,6 +144,9 @@ class TelegramRequest
         }
         if (isset($update['channel_post'])) {
             return self::CHANNEL_POST;
+        }
+        if (isset($update['video_note'])) {
+            return self::VIDEO_NOTE;
         }
 
         return false;
