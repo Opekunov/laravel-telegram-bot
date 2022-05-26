@@ -63,6 +63,57 @@ class TelegramMessage extends Telegram
     }
 
     /**
+     * Use this method to forward messages of any kind.
+     * Service messages can't be forwarded. On success, the sent Message is returned.
+     *
+     * @param  int  $chatId  Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+     * @param  int  $fromChatId  Unique identifier for the chat where the original message was sent (or channel username in the format
+     * @channelusername)
+     * @param  int  $messageId  Message identifier in the chat specified in from_chat_id
+     * @param  bool  $disableNotification  Sends the message silently. Users will receive a notification with no sound.
+     *
+     * @return array
+     * @throws Exceptions\TelegramRequestException
+     * @throws Exceptions\TelegramTooManyRequestsException
+     * @see https://core.telegram.org/bots/api#forwardmessage
+     */
+    public function forward(int $chatId, int $fromChatId, int $messageId, bool $disableNotification = false)
+    {
+        return $this->sendRequest('forwardMessage', [
+            'chat_id'              => $chatId,
+            'from_chat_id'         => $fromChatId,
+            'message_id'           => $messageId,
+            'disable_notification' => $disableNotification
+        ]);
+    }
+
+    /**
+     * Use this method to copy messages of any kind. Service messages and invoice messages can't be copied.
+     * The method is analogous to the method forwardMessage, but the copied message doesn't have a link to the original message.
+     * Returns the MessageId of the sent message on success.
+     *
+     * @param  int  $chatId  Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+     * @param  int  $fromChatId  Unique identifier for the chat where the original message was sent
+     * (or channel username in the format  @channelusername)
+     * @param  int  $messageId  Message identifier in the chat specified in from_chat_id
+     * @param  bool  $disableNotification  Sends the message silently. Users will receive a notification with no sound.
+     *
+     * @return array
+     * @throws Exceptions\TelegramRequestException
+     * @throws Exceptions\TelegramTooManyRequestsException
+     * @see https://core.telegram.org/bots/api#copymessage
+     */
+    public function copy(int $chatId, int $fromChatId, int $messageId, bool $disableNotification = false)
+    {
+        return $this->sendRequest('copyMessage', [
+            'chat_id'              => $chatId,
+            'from_chat_id'         => $fromChatId,
+            'message_id'           => $messageId,
+            'disable_notification' => $disableNotification
+        ]);
+    }
+
+    /**
      * Set message text content
      *
      * @param  string  $content  String. 1-4096 characters
