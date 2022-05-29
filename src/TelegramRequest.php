@@ -587,6 +587,16 @@ class TelegramRequest
     }
 
     /**
+     * Get document file ID
+     *
+     * @return array|null
+     */
+    public function documentThumbFileID(): ?string
+    {
+        return @$this->data['message']['document']['thumb']['file_id'];
+    }
+
+    /**
      * Get video
      *
      * @return array|null
