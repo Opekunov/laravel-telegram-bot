@@ -562,7 +562,7 @@ class TelegramMessage extends Telegram
      * @throws Exceptions\TelegramRequestException
      * @throws Exceptions\TelegramTooManyRequestsException
      */
-    protected function deleteMessage(int $chatId, int $messageId): array
+    public function deleteMessage(int $chatId, int $messageId): array
     {
         return $this->sendRequest('deleteMessage', ['chat_id' => $chatId, 'message_id' => $messageId]);
     }
