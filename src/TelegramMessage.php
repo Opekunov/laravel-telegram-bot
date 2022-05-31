@@ -283,6 +283,21 @@ class TelegramMessage extends Telegram
     }
 
     /**
+     * Set reply keyboard
+     *
+     * @param  array<array>  $rows  Rows of buttons (array of arrays)
+     *
+     * @return $this
+     */
+    public function setReplyKeyboard(array $rows): TelegramMessage
+    {
+        foreach ($rows as $row) {
+            $this->addReplyButtonsRow($row);
+        }
+        return $this;
+    }
+
+    /**
      * Add one row of ReplyButtons
      *
      * @param  array<array>  $buttons  For example:
