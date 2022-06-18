@@ -74,7 +74,7 @@ class TelegramRequest
     public function __construct(array $updateData)
     {
         $this->updateId = @$updateData['update_id'];
-        $this->data = isset($updateData['message']) ? $updateData : ['message' => $updateData];
+        $this->data = $updateData;
     }
 
     public function __call($name, $arguments)
@@ -412,7 +412,7 @@ class TelegramRequest
      *
      * @return array
      */
-    public function chat(): array
+    public function chat(): ?array
     {
         return @$this->data['message']['chat'];
     }
@@ -422,7 +422,7 @@ class TelegramRequest
      *
      * @return array
      */
-    public function message(): array
+    public function message(): ?array
     {
         return @$this->data['message'];
     }
@@ -496,6 +496,17 @@ class TelegramRequest
      */
     public function fromID(): ?int
     {
+        $type = $this->getUpdateType();
+        if ($type == self::CALLBACK_QUERY) {
+            return $this->data['callback_query']['forward_from']['id'];
+        }
+        if ($type == self::CHANNEL_POST) {
+            return $this->data['channel_post']['forward_from']['id'];
+        }
+        if ($type == self::EDITED_MESSAGE) {
+            return @$this->data['edited_message']['forward_from']['id'];
+        }
+
         return $this->data['message']['forward_from']['id'];
     }
 
@@ -506,6 +517,17 @@ class TelegramRequest
      */
     public function fromChatID(): int
     {
+        $type = $this->getUpdateType();
+        if ($type == self::CALLBACK_QUERY) {
+            return $this->data['callback_query']['forward_from_chat']['id'];
+        }
+        if ($type == self::CHANNEL_POST) {
+            return $this->data['channel_post']['forward_from_chat']['id'];
+        }
+        if ($type == self::EDITED_MESSAGE) {
+            return @$this->data['edited_message']['forward_from_chat']['id'];
+        }
+
         return $this->data['message']['forward_from_chat']['id'];
     }
 
@@ -516,11 +538,18 @@ class TelegramRequest
      */
     public function messageFromGroup(): bool
     {
-        if ($this->data['message']['chat']['type'] == 'private') {
-            return false;
+        $type = $this->getUpdateType();
+        if ($type == self::CALLBACK_QUERY) {
+            return $this->data['callback_query']['chat']['type'] == 'group';
+        }
+        if ($type == self::CHANNEL_POST) {
+            return $this->data['channel_post']['chat']['type'] == 'group';
+        }
+        if ($type == self::EDITED_MESSAGE) {
+            return $this->data['edited_message']['chat']['type'] == 'group';
         }
 
-        return true;
+        return $this->data['message']['chat']['type'] == 'group';
     }
 
     /**
@@ -530,11 +559,18 @@ class TelegramRequest
      */
     public function messageFromPrivate(): bool
     {
-        if ($this->data['message']['chat']['type'] == 'private') {
-            return true;
+        $type = $this->getUpdateType();
+        if ($type == self::CALLBACK_QUERY) {
+            return $this->data['callback_query']['chat']['type'] == 'private';
+        }
+        if ($type == self::CHANNEL_POST) {
+            return $this->data['channel_post']['chat']['type'] == 'private';
+        }
+        if ($type == self::EDITED_MESSAGE) {
+            return $this->data['edited_message']['chat']['type'] == 'private';
         }
 
-        return false;
+        return $this->data['message']['chat']['type'] == 'private';
     }
 
     /**
@@ -696,17 +732,6 @@ class TelegramRequest
         return @$this->data['message']['audio']['file_id'];
     }
 
-
-    /**
-     * Get photo
-     *
-     * @return array|null
-     */
-    public function photo(): ?array
-    {
-        return @$this->data['message']['photo'];
-    }
-
     /**
      * //TODO: TESTS
      * Get photo ID
@@ -716,8 +741,20 @@ class TelegramRequest
     public function photoFileID(): ?string
     {
         $photo = $this->photo();
-        if(!$photo) return null;
+        if (!$photo) {
+            return null;
+        }
         return end($photo)['file_id'];
+    }
+
+    /**
+     * Get photo
+     *
+     * @return array|null
+     */
+    public function photo(): ?array
+    {
+        return @$this->data['message']['photo'];
     }
 
     /**

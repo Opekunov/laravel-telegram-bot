@@ -317,6 +317,7 @@ class TelegramMessage extends Telegram
                 $this->payload['reply_markup'] = json_decode($this->payload['reply_markup'], true);
             }
             $this->payload['reply_markup']['resize_keyboard'] = true;
+            $this->payload['reply_markup']['one_time_keyboard'] = false;
             $this->payload['reply_markup']['keyboard'][] = $buttons;
         }
         return $this;
