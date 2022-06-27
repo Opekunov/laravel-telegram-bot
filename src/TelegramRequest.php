@@ -540,7 +540,7 @@ class TelegramRequest
     {
         $type = $this->getUpdateType();
         if ($type == self::CALLBACK_QUERY) {
-            return $this->data['callback_query']['chat']['type'] == 'group';
+            return $this->data['callback_query']['message']['chat']['type'] == 'group';
         }
         if ($type == self::CHANNEL_POST) {
             return $this->data['channel_post']['chat']['type'] == 'group';
@@ -561,7 +561,7 @@ class TelegramRequest
     {
         $type = $this->getUpdateType();
         if ($type == self::CALLBACK_QUERY) {
-            return $this->data['callback_query']['chat']['type'] == 'private';
+            return $this->data['callback_query']['message']['chat']['type'] == 'private';
         }
         if ($type == self::CHANNEL_POST) {
             return $this->data['channel_post']['chat']['type'] == 'private';
