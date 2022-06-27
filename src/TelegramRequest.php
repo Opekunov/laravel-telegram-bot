@@ -109,9 +109,6 @@ class TelegramRequest
         if (isset($update['edited_message'])) {
             return self::EDITED_MESSAGE;
         }
-        if (isset($update['message']['text'])) {
-            return self::MESSAGE;
-        }
         if (isset($update['message']['photo'])) {
             return self::PHOTO;
         }
@@ -147,6 +144,9 @@ class TelegramRequest
         }
         if (isset($update['message']['video_note'])) {
             return self::VIDEO_NOTE;
+        }
+        if (isset($update['message']['text'])) {
+            return self::MESSAGE;
         }
 
         return false;
