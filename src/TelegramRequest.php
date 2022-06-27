@@ -406,18 +406,14 @@ class TelegramRequest
     {
         $type = $this->getUpdateType();
         if ($type == self::CALLBACK_QUERY) {
-            return @$this->data['callback_query']['from']['id'];
+            return @$this->data['callback_query']['from'];
         }
         if ($type == self::CHANNEL_POST) {
-            return @$this->data['channel_post']['from']['id'];
+            return @$this->data['channel_post']['from'];
         }
         if ($type == self::EDITED_MESSAGE) {
-            return @$this->data['edited_message']['from']['id'];
+            return @$this->data['edited_message']['from'];
         }
-        if ($type == self::MESSAGE) {
-            return @$this->data['message']['from']['id'];
-        }
-
         return @$this->data['message']['from'];
     }
 
@@ -428,6 +424,16 @@ class TelegramRequest
      */
     public function chat(): ?array
     {
+        $type = $this->getUpdateType();
+        if ($type == self::CALLBACK_QUERY) {
+            return @$this->data['callback_query']['message']['chat'];
+        }
+        if ($type == self::CHANNEL_POST) {
+            return @$this->data['channel_post']['chat'];
+        }
+        if ($type == self::EDITED_MESSAGE) {
+            return @$this->data['edited_message']['chat'];
+        }
         return @$this->data['message']['chat'];
     }
 
