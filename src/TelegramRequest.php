@@ -404,6 +404,20 @@ class TelegramRequest
      */
     public function from(): ?array
     {
+        $type = $this->getUpdateType();
+        if ($type == self::CALLBACK_QUERY) {
+            return @$this->data['callback_query']['from']['id'];
+        }
+        if ($type == self::CHANNEL_POST) {
+            return @$this->data['channel_post']['from']['id'];
+        }
+        if ($type == self::EDITED_MESSAGE) {
+            return @$this->data['edited_message']['from']['id'];
+        }
+        if ($type == self::MESSAGE) {
+            return @$this->data['message']['from']['id'];
+        }
+
         return @$this->data['message']['from'];
     }
 
