@@ -24,6 +24,8 @@ use Opekunov\LaravelTelegramBot\Exceptions\TelegramException;
  * @method bool isLocation()
  * @method bool isContact()
  * @method bool isChannelPost()
+ * @method bool isMyChatMember()
+ * @method bool isChatMember()
  *
  * @author Opekunov
  * @author Refactored https://github.com/Eleirbag89/TelegramBotPHP/blob/master/Telegram.php
@@ -62,6 +64,18 @@ class TelegramRequest
     const CHANNEL_POST = 'channel_post';
     /**  Constant for type Video note. */
     const VIDEO_NOTE = 'video_note';
+
+    /**  The bot's chat member status was updated in a chat.
+     * For private chats, this update is received only when the bot
+     * is blocked or unblocked by the user..
+     */
+    const MY_CHAT_MEMBER = 'my_chat_member';
+
+    /**
+     * The bot's chat member status was updated in a chat.
+     * For private chats, this update is received only when the bot is blocked or unblocked by the user.
+     */
+    const CHAT_MEMBER = 'chat_member';
 
     protected array $data;
     protected ?int $updateId;
@@ -102,6 +116,12 @@ class TelegramRequest
         $update = $this->data;
         if (isset($update['inline_query'])) {
             return self::INLINE_QUERY;
+        }
+        if (isset($update['my_chat_member'])) {
+            return self::MY_CHAT_MEMBER;
+        }
+        if (isset($update['chat_member'])) {
+            return self::CHAT_MEMBER;
         }
         if (isset($update['callback_query'])) {
             return self::CALLBACK_QUERY;
@@ -181,18 +201,24 @@ class TelegramRequest
         if ($type == self::EDITED_MESSAGE) {
             return @$this->data['edited_message']['text'];
         }
+        if($type == self::MESSAGE) {
+            return @$this->data['message']['text'];
+        }
 
-        return @$this->data['message']['text'];
+        return null;
     }
 
-    public function caption()
+    public function caption(): ?string
     {
         $type = $this->getUpdateType();
         if ($type == self::CHANNEL_POST) {
             return @$this->data['channel_post']['caption'];
         }
+        if($type = self::MESSAGE) {
+            return @$this->data['message']['caption'];
+        }
 
-        return @$this->data['message']['caption'];
+        return null;
     }
 
     /**
@@ -215,8 +241,11 @@ class TelegramRequest
         if ($type == self::INLINE_QUERY) {
             return @$this->data['inline_query']['from']['id'];
         }
+        if ($type == self::MY_CHAT_MEMBER) {
+            return @$this->data['my_chat_member']['chat']['id'];
+        }
 
-        return $this->data['message']['chat']['id'];
+        return @$this->data['message']['chat']['id'];
     }
 
     /**
@@ -236,8 +265,11 @@ class TelegramRequest
         if ($type == self::EDITED_MESSAGE) {
             return @$this->data['edited_message']['message_id'];
         }
+        if ($type == self::MY_CHAT_MEMBER) {
+            return null;
+        }
 
-        return $this->data['message']['message_id'];
+        return @$this->data['message']['message_id'];
     }
 
     /**
@@ -257,7 +289,7 @@ class TelegramRequest
      */
     public function replyToMessageFromUserID(): ?int
     {
-        return $this->data['message']['reply_to_message']['forward_from']['id'];
+        return @$this->data['message']['reply_to_message']['forward_from']['id'];
     }
 
     /**
@@ -369,6 +401,9 @@ class TelegramRequest
         if ($type == self::EDITED_MESSAGE) {
             return @$this->data['edited_message']['from']['first_name'];
         }
+        if ($type == self::MY_CHAT_MEMBER) {
+            return @$this->data['my_chat_member']['from']['first_name'];
+        }
 
         return @$this->data['message']['from']['first_name'];
     }
@@ -393,6 +428,9 @@ class TelegramRequest
         if ($type == self::MESSAGE) {
             return @$this->data['message']['from']['last_name'];
         }
+        if ($type == self::MY_CHAT_MEMBER) {
+            return @$this->data['my_chat_member']['from']['last_name'];
+        }
 
         return '';
     }
@@ -414,6 +452,9 @@ class TelegramRequest
         if ($type == self::EDITED_MESSAGE) {
             return @$this->data['edited_message']['from'];
         }
+        if ($type == self::MY_CHAT_MEMBER) {
+            return @$this->data['my_chat_member']['from'];
+        }
         return @$this->data['message']['from'];
     }
 
@@ -433,6 +474,9 @@ class TelegramRequest
         }
         if ($type == self::EDITED_MESSAGE) {
             return @$this->data['edited_message']['chat'];
+        }
+        if ($type == self::MY_CHAT_MEMBER) {
+            return @$this->data['my_chat_member']['chat'];
         }
         return @$this->data['message']['chat'];
     }
@@ -463,6 +507,9 @@ class TelegramRequest
         }
         if ($type == self::EDITED_MESSAGE) {
             return @$this->data['edited_message']['from']['username'];
+        }
+        if ($type == self::MY_CHAT_MEMBER) {
+            return @$this->data['my_chat_member']['from']['username'];
         }
 
         return @$this->data['message']['from']['username'];
@@ -497,16 +544,19 @@ class TelegramRequest
     {
         $type = $this->getUpdateType();
         if ($type == self::CALLBACK_QUERY) {
-            return $this->data['callback_query']['from']['id'];
+            return @$this->data['callback_query']['from']['id'];
         }
         if ($type == self::CHANNEL_POST) {
-            return $this->data['channel_post']['from']['id'];
+            return @$this->data['channel_post']['from']['id'];
         }
         if ($type == self::EDITED_MESSAGE) {
             return @$this->data['edited_message']['from']['id'];
         }
+        if ($type == self::MY_CHAT_MEMBER) {
+            return @$this->data['my_chat_member']['from']['id'];
+        }
 
-        return $this->data['message']['from']['id'];
+        return @$this->data['message']['from']['id'];
     }
 
     /**
@@ -518,16 +568,16 @@ class TelegramRequest
     {
         $type = $this->getUpdateType();
         if ($type == self::CALLBACK_QUERY) {
-            return $this->data['callback_query']['forward_from']['id'];
+            return @$this->data['callback_query']['forward_from']['id'];
         }
         if ($type == self::CHANNEL_POST) {
-            return $this->data['channel_post']['forward_from']['id'];
+            return @$this->data['channel_post']['forward_from']['id'];
         }
         if ($type == self::EDITED_MESSAGE) {
             return @$this->data['edited_message']['forward_from']['id'];
         }
 
-        return $this->data['message']['forward_from']['id'];
+        return @$this->data['message']['forward_from']['id'];
     }
 
     /**
@@ -539,16 +589,16 @@ class TelegramRequest
     {
         $type = $this->getUpdateType();
         if ($type == self::CALLBACK_QUERY) {
-            return $this->data['callback_query']['forward_from_chat']['id'];
+            return @$this->data['callback_query']['forward_from_chat']['id'];
         }
         if ($type == self::CHANNEL_POST) {
-            return $this->data['channel_post']['forward_from_chat']['id'];
+            return @$this->data['channel_post']['forward_from_chat']['id'];
         }
         if ($type == self::EDITED_MESSAGE) {
             return @$this->data['edited_message']['forward_from_chat']['id'];
         }
 
-        return $this->data['message']['forward_from_chat']['id'];
+        return @$this->data['message']['forward_from_chat']['id'];
     }
 
     /**
@@ -581,16 +631,16 @@ class TelegramRequest
     {
         $type = $this->getUpdateType();
         if ($type == self::CALLBACK_QUERY) {
-            return $this->data['callback_query']['message']['chat']['type'] == 'private';
+            return @$this->data['callback_query']['message']['chat']['type'] === 'private';
         }
         if ($type == self::CHANNEL_POST) {
-            return $this->data['channel_post']['chat']['type'] == 'private';
+            return @$this->data['channel_post']['chat']['type'] === 'private';
         }
         if ($type == self::EDITED_MESSAGE) {
-            return $this->data['edited_message']['chat']['type'] == 'private';
+            return @$this->data['edited_message']['chat']['type'] === 'private';
         }
 
-        return $this->data['message']['chat']['type'] == 'private';
+        return @$this->data['message']['chat']['type'] === 'private';
     }
 
     /**
