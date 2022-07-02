@@ -639,6 +639,9 @@ class TelegramRequest
         if ($type == self::EDITED_MESSAGE) {
             return @$this->data['edited_message']['chat']['type'] === 'private';
         }
+        if ($type == self::MY_CHAT_MEMBER) {
+            return @$this->data['my_chat_member']['chat']['type'] === 'private';
+        }
 
         return @$this->data['message']['chat']['type'] === 'private';
     }
