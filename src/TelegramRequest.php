@@ -201,7 +201,7 @@ class TelegramRequest
         if ($type == self::EDITED_MESSAGE) {
             return @$this->data['edited_message']['text'];
         }
-        if($type == self::MESSAGE) {
+        if ($type == self::MESSAGE) {
             return @$this->data['message']['text'];
         }
 
@@ -214,7 +214,7 @@ class TelegramRequest
         if ($type == self::CHANNEL_POST) {
             return @$this->data['channel_post']['caption'];
         }
-        if($type = self::MESSAGE) {
+        if ($type = self::MESSAGE) {
             return @$this->data['message']['caption'];
         }
 
@@ -930,5 +930,32 @@ class TelegramRequest
         return @$this->data['message']['sticker']['thumb']['file_id'];
     }
 
+    /**
+     * New information about the chat member
+     *
+     * @return array|null
+     */
+    public function getNewChatMember(): ?array
+    {
+        if ($this->isMyChatMember()) {
+            return @$this->data['my_chat_member']['new_chat_member'];
+        }
+
+        return null;
+    }
+
+    /**
+     * Previous information about the chat member
+     *
+     * @return array|null
+     */
+    public function getOldChatMember(): ?array
+    {
+        if ($this->isMyChatMember()) {
+            return @$this->data['my_chat_member']['old_chat_member'];
+        }
+
+        return null;
+    }
 
 }
