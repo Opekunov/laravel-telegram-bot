@@ -17,15 +17,33 @@ abstract class Receiver
 
     protected Handler $handler;
 
-    public function execute(): void
+    public function execute(): void {}
+
+    protected function executeByType(?string $type, ...$args): void
     {
+        if (isset($this->actions[$type])) {
+            $action = is_string($this->actions[$type]) ? new $this->actions[$type] : $this->actions[$type];
+            call_user_func($action, ...$args);
+        }
+    }
+
+    protected function preExecute(...$args): void
+    {
+        if (isset($this->actions['pre_execute'])) {
+            call_user_func($this->actions['pre_execute'], ...$args);
+        }
+    }
+
+    protected function checkFilters(): bool {
         if (!empty($this->filters)) {
             foreach ($this->filters as $filter) {
                 if (!call_user_func($filter)) {
-                    return;
+                    return false;
                 }
             }
         }
+
+        return true;
     }
 
     public function __construct(Handler $handler)
@@ -47,7 +65,7 @@ abstract class Receiver
                 throw new \TypeError("Action $type not supported");
             }
 
-            $this->actions[$type] = is_string($func) ? new $type : $func;
+            $this->actions[$type] = $func;
 
             return $this;
         }

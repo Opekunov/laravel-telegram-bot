@@ -16,8 +16,8 @@ namespace Opekunov\LaravelTelegramBot\Receivers;
  * @method UpdateReceiver setUpCallbackQueryAction(string|callable $func) Sets the function or Action::class (with __invoke()) that will be called if the update type is CallbackQuery. First argument is CallbackQuery class, second argument is Handler class
  * @method UpdateReceiver setUpShippingQueryAction(string|callable $func) Sets the function or Action::class (with __invoke()) that will be called if  the update type is ShippingQuery. First argument is ShippingQuery class, second argument is Handler class
  * @method UpdateReceiver setUpPreCheckoutQueryAction(string|callable $func) Sets the function or Action::class (with __invoke()) that will be called if the update type is PreCheckout. First argument is PreCheckout class, second argument is Handler class
- * @method UpdateReceiver setUpPoolAction(string|callable $func) Sets the function or Action::class (with __invoke()) that will be called if the update type is Pool. First argument is Pool class, second argument is Handler class
- * @method UpdateReceiver setUpPoolAnswerAction(string|callable $func) Sets the function or Action::class (with __invoke()) that will be called if the update type is PoolAnswer. First argument is PoolAnswer class, second argument is Handler class
+ * @method UpdateReceiver setUpPollAction(string|callable $func) Sets the function or Action::class (with __invoke()) that will be called if the update type is Pool. First argument is Pool class, second argument is Handler class
+ * @method UpdateReceiver setUpPollAnswerAction(string|callable $func) Sets the function or Action::class (with __invoke()) that will be called if the update type is PoolAnswer. First argument is PoolAnswer class, second argument is Handler class
  * @method UpdateReceiver setUpMyChatMemberAction(string|callable $func) Sets the function or Action::class (with __invoke()) that will be called if the update type is MyChatMember. First argument is MyChatMember class, second argument is Handler class
  * @method UpdateReceiver setUpChatMemberAction(string|callable $func) Sets the function or Action::class (with __invoke()) that will be called if the update type is ChatMember. First argument is ChatMember class, second argument is Handler class
  * @method UpdateReceiver setUpChatJoinRequestAction(string|callable $func) Sets the function or Action::class (with __invoke()) that will be called if the update type is ChatJoinRequest. First argument is ChatJoinRequest class, second argument is Handler class
@@ -50,18 +50,16 @@ class UpdateReceiver extends Receiver
      */
     public function execute(): void
     {
-        parent::execute();
+        if(!$this->checkFilters()) {
+            return;
+        }
 
         $handler = $this->handler;
 
-        if (isset($this->actions['pre_execute'])) {
-            call_user_func($this->actions['pre_execute'], $handler);
-        }
+        $this->preExecute($handler);
 
         $updateType = $handler->getUpdate()->getUpdateType();
-        if (isset($this->actions[$updateType])) {
-            call_user_func($this->actions[$updateType], $handler->getUpdate()->getUpdateContent(), $handler);
-        }
+        $this->executeByType($updateType, $handler->getUpdate()->getUpdateContent(), $handler);
     }
 
 }

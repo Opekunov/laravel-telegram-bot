@@ -6,31 +6,63 @@
 
 namespace Receivers;
 
+use Opekunov\LaravelTelegramBot\Actions\TestAction;
+use Opekunov\LaravelTelegramBot\Entities\ChannelPost;
+use Opekunov\LaravelTelegramBot\Entities\EditedMessage;
 use Opekunov\LaravelTelegramBot\Entities\Message;
-use Opekunov\LaravelTelegramBot\Entities\Update;
-use Opekunov\LaravelTelegramBot\Exceptions\TelegramException;
+use Opekunov\LaravelTelegramBot\Entities\PollAnswer;
 use Opekunov\LaravelTelegramBot\Handler;
 use Opekunov\LaravelTelegramBot\Receivers\UpdateReceiver;
+use Opekunov\LaravelTelegramBot\Utilities\Faker;
 use PHPUnit\Framework\TestCase;
 
 class UpdateReceiverTest extends TestCase
 {
+    use Faker;
 
     public function testSetUpChannelPostAction()
     {
+        $message = $this->getFakeMessageObject();
+        $channel_post = new ChannelPost($message->jsonSerialize());
+        $handler = new Handler($this->getFakeUpdateObject(compact('channel_post')));
+        $messageId = $handler->getUpdate()->getChannelPost()->getMessageId();
 
+        $receiver = new UpdateReceiver($handler);
+        $receiver->setUpChannelPostAction(fn(ChannelPost $channelPost) => $this->assertEquals($channelPost->getMessageId(), $messageId))
+            ->execute();
     }
 
     public function testSetUpEditedMessageAction()
     {
+        $message = $this->getFakeMessageObject();
+        $edited_message = new EditedMessage($message->jsonSerialize());
+        $handler = new Handler($this->getFakeUpdateObject(compact('edited_message')));
+        $messageId = $handler->getUpdate()->getEditedMessage()->getMessageId();
+
+        $receiver = new UpdateReceiver($handler);
+        $receiver
+            ->setUpEditedMessageAction(fn(EditedMessage $editedMessage) => $this->assertEquals($editedMessage->getMessageId(), $messageId))
+            ->execute();
     }
 
     public function testSetUpPreExecuteAction()
     {
+        $receiver = new UpdateReceiver(new Handler($this->getFakeUpdateObject($this->getFakeMessageObject()->jsonSerialize())));
+        $receiver
+            ->setUpPreExecuteAction(fn() => $this->assertTrue(true))
+            ->execute();
     }
 
-    public function testSetUpPoolAnswerAction()
+    public function testSetUpPollAnswerAction()
     {
+        $poll_answer = new PollAnswer(['user' => $this->userTemplate, 'pool_id' => mt_rand(), 'option_id' => mt_rand()]);
+        $handler = new Handler($this->getFakeUpdateObject(compact('poll_answer')));
+        $option = $poll_answer->getOptionIds();
+
+        $receiver = new UpdateReceiver($handler);
+        $receiver
+            ->setUpPollAnswerAction(fn(PollAnswer $pollAnswer) => $this->assertEquals($pollAnswer->getOptionIds(), $option))
+            ->execute();
     }
 
     public function testSetUpPreCheckoutQueryAction()
@@ -55,13 +87,39 @@ class UpdateReceiverTest extends TestCase
 
     public function testSetUpMessageAction()
     {
-        $jsonFile = __DIR__.'/../examples_json/message.json';
-        $testData = file_get_contents($jsonFile);
-        $handler = new Handler($testData);
+        $message = $this->getFakeMessageObject();
+        $handler = new Handler($this->getFakeUpdateObject(compact('message')));
         $messageId = $handler->getUpdate()->getMessage()->getMessageId();
 
         $receiver = new UpdateReceiver($handler);
         $receiver->setUpMessageAction(fn(Message $message) => $this->assertEquals($message->getMessageId(), $messageId))
+            ->execute();
+
+        $receiver = new UpdateReceiver($handler);
+        $receiver
+            ->setUpMessageAction(TestAction::class)
+            ->execute();
+    }
+
+    public function testAddFilters()
+    {
+        $message = $this->getFakeMessageObject();
+        $handler = new Handler($this->getFakeUpdateObject(compact('message')));
+
+        $receiver = new UpdateReceiver($handler);
+        $receiver
+            ->addFilter(fn() => false)
+            ->addFilter(fn() => true)
+            ->setUpMessageAction(fn(Message $message) => throw new \Exception('Oops'))
+            ->execute();
+        $this->assertTrue(true);
+
+        $this->expectException(\Exception::class);
+        $receiver = new UpdateReceiver($handler);
+        $receiver
+            ->addFilter(fn() => true)
+            ->addFilter(fn() => true)
+            ->setUpMessageAction(fn(Message $message) => throw new \Exception('Oops'))
             ->execute();
     }
 
