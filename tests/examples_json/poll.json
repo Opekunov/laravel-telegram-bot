@@ -1,0 +1,37 @@
+{
+  "update_id": 912782422,
+  "message": {
+    "message_id": 21,
+    "from": {
+      "id": 5404263648,
+      "is_bot": false,
+      "first_name": "Q",
+      "language_code": "ru"
+    },
+    "chat": {
+      "id": 5404263648,
+      "first_name": "Q",
+      "type": "private"
+    },
+    "date": 1658062749,
+    "poll": {
+      "id": "5377454188810732242",
+      "question": "\u0418\u0434\u0451\u043c",
+      "options": [
+        {
+          "text": "\u0414\u0430",
+          "voter_count": 0
+        },
+        {
+          "text": "\u041d\u0435\u0442",
+          "voter_count": 0
+        }
+      ],
+      "total_voter_count": 0,
+      "is_closed": false,
+      "is_anonymous": true,
+      "type": "regular",
+      "allows_multiple_answers": false
+    }
+  }
+}

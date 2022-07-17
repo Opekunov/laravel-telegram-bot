@@ -1,0 +1,49 @@
+{
+  "update_id": 912782419,
+  "message": {
+    "message_id": 18,
+    "from": {
+      "id": 5404263648,
+      "is_bot": false,
+      "first_name": "Q",
+      "language_code": "ru"
+    },
+    "chat": {
+      "id": 5404263648,
+      "first_name": "Q",
+      "type": "private"
+    },
+    "date": 1658062652,
+    "media_group_id": "13264501215982082",
+    "photo": [
+      {
+        "file_id": "AgACAgIAAxkBAAMSYtQHOwPruz-5dPaWDet7ku0TNNMAAji-MRsYjqBKHl6TP0zGLtEBAAMCAANzAAMpBA",
+        "file_unique_id": "AQADOL4xGxiOoEp4",
+        "file_size": 1645,
+        "width": 90,
+        "height": 67
+      },
+      {
+        "file_id": "AgACAgIAAxkBAAMSYtQHOwPruz-5dPaWDet7ku0TNNMAAji-MRsYjqBKHl6TP0zGLtEBAAMCAANtAAMpBA",
+        "file_unique_id": "AQADOL4xGxiOoEpy",
+        "file_size": 23457,
+        "width": 320,
+        "height": 240
+      },
+      {
+        "file_id": "AgACAgIAAxkBAAMSYtQHOwPruz-5dPaWDet7ku0TNNMAAji-MRsYjqBKHl6TP0zGLtEBAAMCAAN4AAMpBA",
+        "file_unique_id": "AQADOL4xGxiOoEp9",
+        "file_size": 101660,
+        "width": 800,
+        "height": 600
+      },
+      {
+        "file_id": "AgACAgIAAxkBAAMSYtQHOwPruz-5dPaWDet7ku0TNNMAAji-MRsYjqBKHl6TP0zGLtEBAAMCAAN5AAMpBA",
+        "file_unique_id": "AQADOL4xGxiOoEp-",
+        "file_size": 138176,
+        "width": 1280,
+        "height": 960
+      }
+    ]
+  }
+}

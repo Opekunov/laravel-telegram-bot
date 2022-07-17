@@ -1,0 +1,36 @@
+{
+  "update_id": 912782414,
+  "message": {
+    "message_id": 13,
+    "from": {
+      "id": 5404263648,
+      "is_bot": false,
+      "first_name": "Q",
+      "language_code": "ru"
+    },
+    "chat": {
+      "id": 5404263648,
+      "first_name": "Q",
+      "type": "private"
+    },
+    "date": 1658062478,
+    "sticker": {
+      "width": 512,
+      "height": 512,
+      "emoji": "\u2764\ufe0f",
+      "set_name": "LadyCat",
+      "is_animated": true,
+      "is_video": false,
+      "thumb": {
+        "file_id": "AAMCAgADGQEAAw1i1AaOlBrI_jyuR_6JtVAacVngJQACWw0AAi8FQUhX8JOWWFWgEwEAB20AAykE",
+        "file_unique_id": "AQADWw0AAi8FQUhy",
+        "file_size": 3582,
+        "width": 128,
+        "height": 128
+      },
+      "file_id": "CAACAgIAAxkBAAMNYtQGjpQayP48rkf-ibVQGnFZ4CUAAlsNAAIvBUFIV_CTllhVoBMpBA",
+      "file_unique_id": "AgADWw0AAi8FQUg",
+      "file_size": 8898
+    }
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "update_id": 912782403,
+  "my_chat_member": {
+    "chat": {
+      "id": -343237347,
+      "title": "\u0422\u0435\u0441\u0442\u043e\u0432\u0430\u044f \u0433\u0440\u0443\u043f\u043f\u0430",
+      "type": "group",
+      "all_members_are_administrators": true
+    },
+    "from": {
+      "id": 216811678,
+      "is_bot": false,
+      "first_name": "Aleksandr",
+      "last_name": "Opekunov",
+      "username": "opekunov",
+      "is_premium": true
+    },
+    "date": 1658061814,
+    "old_chat_member": {
+      "user": {
+        "id": 5595935257,
+        "is_bot": true,
+        "first_name": "TestBot",
+        "username": "the_unique_test_bot"
+      },
+      "status": "left"
+    },
+    "new_chat_member": {
+      "user": {
+        "id": 5595935257,
+        "is_bot": true,
+        "first_name": "TestBot",
+        "username": "the_unique_test_bot"
+      },
+      "status": "member"
+    }
+  }
+}

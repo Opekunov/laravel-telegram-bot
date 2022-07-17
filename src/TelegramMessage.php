@@ -378,6 +378,15 @@ class TelegramMessage extends Telegram
         return $this;
     }
 
+    public function setOneTimeKeyboard(): TelegramMessage
+    {
+        if (isset($this->payload['reply_markup'])) {
+            $this->payload['reply_markup']['one_time_keyboard'] = true;
+        }
+
+        return $this;
+    }
+
     /**
      * Clear reply markup rows
      *

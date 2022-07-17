@@ -1,0 +1,39 @@
+{
+  "update_id": 912782405,
+  "message": {
+    "message_id": 7,
+    "from": {
+      "id": 5404263648,
+      "is_bot": false,
+      "first_name": "Q",
+      "language_code": "ru"
+    },
+    "chat": {
+      "id": -343237347,
+      "title": "\u0422\u0435\u0441\u0442\u043e\u0432\u0430\u044f \u0433\u0440\u0443\u043f\u043f\u0430",
+      "type": "group",
+      "all_members_are_administrators": true
+    },
+    "date": 1658062015,
+    "new_chat_participant": {
+      "id": 5404263648,
+      "is_bot": false,
+      "first_name": "Q",
+      "language_code": "ru"
+    },
+    "new_chat_member": {
+      "id": 5404263648,
+      "is_bot": false,
+      "first_name": "Q",
+      "language_code": "ru"
+    },
+    "new_chat_members": [
+      {
+        "id": 5404263648,
+        "is_bot": false,
+        "first_name": "Q",
+        "language_code": "ru"
+      }
+    ]
+  }
+}
