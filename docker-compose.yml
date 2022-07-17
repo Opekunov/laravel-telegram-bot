@@ -1,0 +1,6 @@
+version: '3'
+services:
+  php:
+    build: ./images/php
+    volumes:
+      - .:/var/www
