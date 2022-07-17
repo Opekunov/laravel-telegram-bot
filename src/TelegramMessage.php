@@ -2,6 +2,7 @@
 
 namespace Opekunov\LaravelTelegramBot;
 
+use GuzzleHttp\Exception\GuzzleException;
 use Opekunov\LaravelTelegramBot\Exceptions\TelegramException;
 
 class TelegramMessage extends Telegram
@@ -68,16 +69,20 @@ class TelegramMessage extends Telegram
      *
      * @param  int  $chatId  Unique identifier for the target chat or username of the target channel (in the format @channelusername)
      * @param  int  $fromChatId  Unique identifier for the chat where the original message was sent (or channel username in the format
-     * @channelusername)
      * @param  int  $messageId  Message identifier in the chat specified in from_chat_id
      * @param  bool  $disableNotification  Sends the message silently. Users will receive a notification with no sound.
      *
      * @return array
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramBotKickedException
+     * @throws Exceptions\TelegramConnectionRefusedException
      * @throws Exceptions\TelegramRequestException
      * @throws Exceptions\TelegramTooManyRequestsException
+     * @throws GuzzleException
+     * @channelusername)
      * @see https://core.telegram.org/bots/api#forwardmessage
      */
-    public function forward(int $chatId, int $fromChatId, int $messageId, bool $disableNotification = false)
+    public function forward(int $chatId, int $fromChatId, int $messageId, bool $disableNotification = false): array
     {
         return $this->sendRequest('forwardMessage', [
             'chat_id'              => $chatId,
@@ -99,8 +104,12 @@ class TelegramMessage extends Telegram
      * @param  bool  $disableNotification  Sends the message silently. Users will receive a notification with no sound.
      *
      * @return array
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramBotKickedException
+     * @throws Exceptions\TelegramConnectionRefusedException
      * @throws Exceptions\TelegramRequestException
      * @throws Exceptions\TelegramTooManyRequestsException
+     * @throws GuzzleException
      * @see https://core.telegram.org/bots/api#copymessage
      */
     public function copy(int $chatId, int $fromChatId, int $messageId, bool $disableNotification = false)
@@ -613,6 +622,16 @@ class TelegramMessage extends Telegram
     }
 
     /**
+     * Get md5 hash of payload
+     *
+     * @return string
+     */
+    public function getPayloadHash(): string
+    {
+       return md5(json_encode($this->payload));
+    }
+
+    /**
      * Delete message
      *
      * @see https://core.telegram.org/bots/api#deletemessage
@@ -621,8 +640,12 @@ class TelegramMessage extends Telegram
      * @param  int  $messageId
      *
      * @return array
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramBotKickedException
+     * @throws Exceptions\TelegramConnectionRefusedException
      * @throws Exceptions\TelegramRequestException
      * @throws Exceptions\TelegramTooManyRequestsException
+     * @throws GuzzleException
      */
     public function deleteMessage(int $chatId, int $messageId): array
     {

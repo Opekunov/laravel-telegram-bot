@@ -2,7 +2,7 @@
 
 namespace Opekunov\LaravelTelegramBot\Exceptions;
 
-class TelegramTooManyRequestsException extends TelegramException
+class TelegramTooManyRequestsException extends TelegramRequestException
 {
 
 }

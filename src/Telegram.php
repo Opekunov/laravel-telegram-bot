@@ -4,7 +4,6 @@ namespace Opekunov\LaravelTelegramBot;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Exception\RequestException;
 use Opekunov\LaravelTelegramBot\Exceptions\TelegramException;
 use Opekunov\LaravelTelegramBot\Exceptions\TelegramRequestException;
 use Opekunov\LaravelTelegramBot\Exceptions\TelegramTooManyRequestsException;
@@ -57,8 +56,12 @@ class Telegram
      * Returns basic information about the bot in form of a User object.
      *
      * @return array
-     * @throws Exceptions\TelegramTooManyRequestsException
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramBotKickedException
+     * @throws Exceptions\TelegramConnectionRefusedException
+     * @throws GuzzleException
      * @throws TelegramRequestException
+     * @throws TelegramTooManyRequestsException
      */
     public function getMe(): array
     {
@@ -66,14 +69,18 @@ class Telegram
     }
 
     /**
-     * Send api request
+     * Send API request
      *
-     * @param  string  $endPoint  Метод телеграмма
+     * @param  string  $endPoint
      * @param  array  $data
      *
      * @return array
-     * @throws TelegramTooManyRequestsException
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramBotKickedException
+     * @throws Exceptions\TelegramConnectionRefusedException
+     * @throws GuzzleException
      * @throws TelegramRequestException
+     * @throws TelegramTooManyRequestsException
      */
     protected function sendRequest(string $endPoint, array $data): array
     {
@@ -92,20 +99,9 @@ class Telegram
                 $body = $response->getBody();
                 throw new TelegramRequestException("Can't encode JSON. Status: {$status}. Body: {$body}");
             }
-        } catch (RequestException $e) {
-            if ($e->getResponse()->getStatusCode() === 404) {
-                throw new TelegramTooManyRequestsException('Bad token. Response body: '.$e->getResponse()->getBody());
-            } else {
-                if ($e->getResponse()->getStatusCode() === 429) {
-                    throw new TelegramTooManyRequestsException($e->getMessage(), $e->getCode(), $e->getPrevious());
-                } else {
-                    throw new TelegramRequestException($e->getMessage(), $e->getCode(), $e->getPrevious());
-                }
-            }
-        } catch (GuzzleException $e) {
-            throw new TelegramRequestException($e->getMessage(), $e->getCode(), $e->getPrevious());
+        } catch (\Exception $exception) {
+            (new TelegramExceptionHandler())->handle($exception, @$data['chat_id']);
         }
-
         return is_array($decodedResponse['result']) ? $decodedResponse['result'] : $decodedResponse;
     }
 
@@ -120,8 +116,12 @@ class Telegram
      *     50. Use lower values to limit the load on your bot's server, and higher values to increase your bot's throughput.
      *
      * @return array
-     * @throws TelegramTooManyRequestsException
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramBotKickedException
+     * @throws Exceptions\TelegramConnectionRefusedException
+     * @throws GuzzleException
      * @throws TelegramRequestException
+     * @throws TelegramTooManyRequestsException
      * @see https://core.telegram.org/bots/api#setwebhook
      */
     public function setWebhook(string $url, int $maxConnections = 40): array
@@ -142,8 +142,12 @@ class Telegram
      * @param  bool  $dropPendingUpdates  Pass True to drop all pending updates
      *
      * @return array
-     * @throws TelegramTooManyRequestsException
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramBotKickedException
+     * @throws Exceptions\TelegramConnectionRefusedException
+     * @throws GuzzleException
      * @throws TelegramRequestException
+     * @throws TelegramTooManyRequestsException
      */
     public function deleteWebhook(bool $dropPendingUpdates = false): array
     {
@@ -163,6 +167,10 @@ class Telegram
      * @param $update Boolean If true updates the pending message list to the last update received. Default to true.
      *
      * @return array the updates as Array.
+     * @throws Exceptions\TelegramBadTokenException
+     * @throws Exceptions\TelegramBotKickedException
+     * @throws Exceptions\TelegramConnectionRefusedException
+     * @throws GuzzleException
      * @throws TelegramRequestException
      * @throws TelegramTooManyRequestsException
      * @see https://core.telegram.org/bots/api#getupdates
