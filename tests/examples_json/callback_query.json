@@ -1,0 +1,44 @@
+{
+  "update_id": 912782428,
+  "callback_query": {
+    "id": "931199070269383405",
+    "from": {
+      "id": 216811678,
+      "is_bot": false,
+      "first_name": "Aleksandr",
+      "last_name": "Opekunov",
+      "username": "opekunov",
+      "language_code": "ru",
+      "is_premium": true
+    },
+    "message": {
+      "message_id": 26,
+      "from": {
+        "id": 5595935257,
+        "is_bot": true,
+        "first_name": "TestBot",
+        "username": "the_unique_test_bot"
+      },
+      "chat": {
+        "id": -343237347,
+        "title": "\u0422\u0435\u0441\u0442\u043e\u0432\u0430\u044f \u0433\u0440\u0443\u043f\u043f\u0430",
+        "type": "group",
+        "all_members_are_administrators": true
+      },
+      "date": 1658063669,
+      "text": "test",
+      "reply_markup": {
+        "inline_keyboard": [
+          [
+            {
+              "text": "123",
+              "callback_data": "test"
+            }
+          ]
+        ]
+      }
+    },
+    "chat_instance": "6786369580582074303",
+    "data": "test"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "update_id": 912782426,
+  "chat_join_request": {
+    "chat": {
+      "id": -343237347,
+      "title": "\u0422\u0435\u0441\u0442\u043e\u0432\u0430\u044f \u0433\u0440\u0443\u043f\u043f\u0430",
+      "type": "group",
+      "all_members_are_administrators": true
+    },
+    "from": {
+      "id": 5404263648,
+      "is_bot": false,
+      "first_name": "Q",
+      "language_code": "ru"
+    },
+    "date": 1658063068,
+    "invite_link": {
+      "invite_link": "https://t.me/+v3avuZuf...",
+      "name": "test admin",
+      "creator": {
+        "id": 216811678,
+        "is_bot": false,
+        "first_name": "Aleksandr",
+        "last_name": "Opekunov",
+        "username": "opekunov",
+        "is_premium": true
+      },
+      "expire_date": 1658149431,
+      "pending_join_request_count": 1,
+      "creates_join_request": true,
+      "is_primary": false,
+      "is_revoked": false
+    }
+  }
+}

@@ -28,6 +28,8 @@ class Telegram
      */
     public function __construct(string $botToken = null, ?string $baseApiUri = null, string $botUsername = '')
     {
+        $baseApiUri = $baseApiUri ?? $this->baseApiUri;
+
         if (function_exists('config')) {
             $botToken = $botToken ?? config('telegram.token');
             $baseApiUri = $baseApiUri ?? config('telegram.base_uri') ?? $this->baseApiUri;

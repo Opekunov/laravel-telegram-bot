@@ -1,0 +1,32 @@
+{
+  "update_id": 912782415,
+  "message": {
+    "message_id": 14,
+    "from": {
+      "id": 5404263648,
+      "is_bot": false,
+      "first_name": "Q",
+      "language_code": "ru"
+    },
+    "chat": {
+      "id": 5404263648,
+      "first_name": "Q",
+      "type": "private"
+    },
+    "date": 1658062527,
+    "video_note": {
+      "duration": 2,
+      "length": 384,
+      "thumb": {
+        "file_id": "AAMCAgADGQEAAw5i1Aa_F1h-dytIKUYn2jLG_ueA7AACSBkAAhiOoEoE3cwjE_8vsAEAB20AAykE",
+        "file_unique_id": "AQADSBkAAhiOoEpy",
+        "file_size": 14032,
+        "width": 320,
+        "height": 320
+      },
+      "file_id": "DQACAgIAAxkBAAMOYtQGvxdYfncrSClGJ9oyxv7ngOwAAkgZAAIYjqBKBN3MIxP_L7ApBA",
+      "file_unique_id": "AgADSBkAAhiOoEo",
+      "file_size": 307829
+    }
+  }
+}

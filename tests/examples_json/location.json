@@ -1,0 +1,22 @@
+{
+  "update_id": 912782421,
+  "message": {
+    "message_id": 20,
+    "from": {
+      "id": 5404263648,
+      "is_bot": false,
+      "first_name": "Q",
+      "language_code": "ru"
+    },
+    "chat": {
+      "id": 5404263648,
+      "first_name": "Q",
+      "type": "private"
+    },
+    "date": 1658062691,
+    "location": {
+      "latitude": 56.302645,
+      "longitude": 37.514255
+    }
+  }
+}

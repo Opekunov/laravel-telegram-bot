@@ -1,0 +1,26 @@
+{
+  "update_id": 912782397,
+  "message": {
+    "message_id": 1,
+    "from": {
+      "id": 5404263648,
+      "is_bot": false,
+      "first_name": "Q",
+      "language_code": "ru"
+    },
+    "chat": {
+      "id": 5404263648,
+      "first_name": "Q",
+      "type": "private"
+    },
+    "date": 1658061686,
+    "text": "/start",
+    "entities": [
+      {
+        "offset": 0,
+        "length": 6,
+        "type": "bot_command"
+      }
+    ]
+  }
+}
