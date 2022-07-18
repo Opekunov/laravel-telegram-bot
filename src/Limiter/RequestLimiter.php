@@ -168,4 +168,13 @@ class RequestLimiter
         $this->limitForGroups = $perTime;
         $this->requestsForGroups = $requestsCount;
     }
+
+    public function resetLimiters(?int $chatId = null)
+    {
+        $this->getLimiter(self::GROUPS_LIMITER_KEY)->reset();
+        $this->getLimiter(self::DIFFERENCE_LIMITER_KEY)->reset();
+        if($chatId){
+            $this->getLimiter(self::PARTICULAR_CACHE_KEY, (string) $chatId)->reset();
+        }
+    }
 }

@@ -9,9 +9,6 @@ namespace Opekunov\LaravelTelegramBot\Limiter;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Facades\Cache;
 
-/**
- * TODO: Optimize cache requests
- */
 class Limiter implements Arrayable, Contracts\LimiterContract
 {
     private int $createdAt;
@@ -43,12 +40,14 @@ class Limiter implements Arrayable, Contracts\LimiterContract
         /** @var self $limiter */
         $limiter = Cache::get($key, new self($key, $max, $ttl));
         $limiter->touch();
+        if(!Cache::has($key)){
+            $limiter->save();
+        }
         return $limiter;
     }
 
     public function touch(): void
     {
-        $this->save();
         if ($this->getTimeLeft() <= 0) {
             $this->reset();
         }
@@ -155,6 +154,7 @@ class Limiter implements Arrayable, Contracts\LimiterContract
         $this->counter += $step;
         $this->updatedAt = $this->now();
         $this->touch();
+        $this->save();
     }
 
     public function save(): bool
