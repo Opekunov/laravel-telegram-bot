@@ -12,7 +12,7 @@
 namespace Opekunov\LaravelTelegramBot\Entities;
 
 use Opekunov\LaravelTelegramBot\Entities\InlineQuery\InlineQueryResult;
-use Longman\TelegramBot\Request;
+use Opekunov\LaravelTelegramBot\Request;
 
 /**
  * Class InlineQuery

@@ -12,6 +12,7 @@
 namespace Opekunov\LaravelTelegramBot\Entities\InputMessageContent;
 
 use Opekunov\LaravelTelegramBot\Entities\InlineQuery\InlineEntity;
+use Opekunov\LaravelTelegramBot\Entities\MessageEntity;
 
 /**
  * Class InputTextMessageContent

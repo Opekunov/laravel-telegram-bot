@@ -13,7 +13,7 @@ use Opekunov\LaravelTelegramBot\Entities\ChatMember\ChatMember;
 use Opekunov\LaravelTelegramBot\Entities\ChatMember\Factory as ChatMemberFactory;
 use Opekunov\LaravelTelegramBot\Entities\Games\GameHighScore;
 use Opekunov\LaravelTelegramBot\Entities\MenuButton\Factory as MenuButtonFactory;
-use Longman\TelegramBot\Request;
+use Opekunov\LaravelTelegramBot\Request;
 
 /**
  * Class ServerResponse
