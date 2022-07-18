@@ -1,89 +1,194 @@
 <?php
+/*
+ * Copyright (c)
+ * Opekunov Aleksandr <iam@opekunov.com>
+ */
 
 namespace Opekunov\LaravelTelegramBot\Limiter;
 
-interface Limiter
+use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Facades\Cache;
+
+/**
+ * TODO: Optimize cache requests
+ */
+class Limiter implements Arrayable, Contracts\LimiterContract
 {
-    /**
-     * Get limiters from Storage
-     *
-     * @return LimitersGroup
-     */
-    public function getLimiters(): LimitersGroup;
+    private int $createdAt;
+    private int $updatedAt;
+    private int $destroyAt;
+    private int $counter = 0;
+    private int $max = 0;
+    private int $ttl = 0;
+    private string $key = '';
 
     /**
-     * Get particular limiter by key from Storage
+     * Create new cache Limiter instance
      *
-     * @param  int|null  $key
-     *
-     * @return LimiterObject
+     * @param  string  $key  unique instance key
+     * @param  int  $max  maximum counter value. Used for comparison only
+     * @param  int  $ttl  time before state reset in seconds
      */
-    public function getParticularLimiter(?int $key = null): LimiterObject;
+    public function __construct(string $key, int $max, int $ttl)
+    {
+        $this->updatedAt = $this->createdAt = $this->now();
+        $this->destroyAt = $this->createdAt + ($ttl * 1000);
+        $this->key = $key;
+        $this->max = $max;
+        $this->ttl = $ttl;
+    }
 
-    /**
-     * Storage current limiters state.
-     * By default - cache
-     *
-     * @param  LimitersGroup  $limiters  Group and Difference LimiterObject
-     * @param  LimiterObject  $particular  Particular LimiterObject
-     * @param  int|null  $particularKey  Particular unique key
-     *
-     * @return bool
-     */
-    public function saveLimiters(LimitersGroup $limiters, LimiterObject $particular, ?int $particularKey = null): bool;
+    public static function getOrCreate(string $key, int $max, int $ttl): self
+    {
+        /** @var self $limiter */
+        $limiter = Cache::get($key, new self($key, $max, $ttl));
+        $limiter->touch();
+        return $limiter;
+    }
 
-    /**
-     * Increase limiters
-     *
-     * @param  string  $method Request method
-     * @param  int|null  $chatId Send to Chat ID
-     * @param  int|null  $inlineMessageId Or InlineMessageId
-     *
-     * @return bool
-     */
-    public function increase(string $method, ?int $chatId = null, ?int $inlineMessageId = null): bool;
+    public function touch(): void
+    {
+        $this->save();
+        if ($this->getTimeLeft() <= 0) {
+            $this->reset();
+        }
+    }
 
-    /**
-     * Check limits for current Request
-     *
-     * @param  string  $method  Request method
-     * @param  int|null  $chatId  Send to Chat ID
-     * @param  int|null  $inlineMessageId  Or InlineMessageId
-     *
-     * @return bool|int If time limit detected return Int time in seconds for next request, else return true
-     */
-    public function checkLimit(string $method, ?int $chatId = null, ?int $inlineMessageId = null): bool|int;
+    public function getTimeLeft(): int
+    {
+        $now = $this->now();
+        return $this->destroyAt - $now;
+    }
 
-    /**
-     * Set groups and channels limits
-     * By default - no more than 20 messages per minute in groups and channels
-     *
-     * @param  int  $requestsCount
-     * @param  int  $perTime
-     *
-     * @see https://core.telegram.org/bots/faq#broadcasting-to-users
-     */
-    public function setGroupsAndChannelsLimits(int $requestsCount, int $perTime): void;
+    protected function now(): int
+    {
+        return intval(floor(microtime(true) * 1000));
+    }
 
-    /**
-     * Set difference chats limits.
-     * By default - no more than 30 messages per second to different chats
-     *
-     * @param  int  $requestsCount
-     * @param  int  $perTime
-     *
-     * @see https://core.telegram.org/bots/faq#broadcasting-to-users
-     */
-    public function setDifferenceLimits(int $requestsCount, int $perTime): void;
+    public function reset(): void
+    {
+        $this->counter = 0;
+        $this->updatedAt = $this->createdAt = $this->now();
+        $this->destroyAt = $this->createdAt + ($this->ttl * 1000);
+    }
 
-    /**
-     * Set particular chat limits.
-     * By default - no limits
-     *
-     * @param  int  $requestsCount
-     * @param  int  $perTime
-     *
-     * @see https://core.telegram.org/bots/faq#broadcasting-to-users
-     */
-    public function setParticularLimits(int $requestsCount, int $perTime): void;
+    public function getCreatedAt(): int
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(int $createdAt): void
+    {
+        $this->createdAt = $createdAt;
+    }
+
+    public function getUpdatedAt(): int
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(int $updatedAt): void
+    {
+        $this->updatedAt = $updatedAt;
+    }
+
+    public function getDestroyAt(): int
+    {
+        return $this->destroyAt;
+    }
+
+    public function setDestroyAt(int $destroyAt): void
+    {
+        $this->destroyAt = $destroyAt;
+    }
+
+    public function getCounter(): int
+    {
+        $this->touch();
+        return $this->counter;
+    }
+
+    public function setCounter(int $counter): void
+    {
+        $this->counter = $counter;
+    }
+
+    public function getMax(): int
+    {
+        return $this->max;
+    }
+
+    public function setMax(int $max): void
+    {
+        $this->max = $max;
+    }
+
+    public function getTtl(): int
+    {
+        return $this->ttl;
+    }
+
+    public function setTtl(int $ttl): void
+    {
+        $this->ttl = $ttl;
+    }
+
+    public function getKey(): string
+    {
+        return $this->key;
+    }
+
+    public function setKey(string $key): void
+    {
+        $this->key = $key;
+    }
+
+    public function incrementIf(callable $statement, int $step = 1): void
+    {
+        if ($statement()) {
+            $this->increment($step);
+        }
+    }
+
+    public function increment(int $step = 1): void
+    {
+        $this->counter += $step;
+        $this->updatedAt = $this->now();
+        $this->touch();
+    }
+
+    public function save(): bool
+    {
+        return Cache::put($this->key, $this, intval($this->getTimeLeft() / 1000));
+    }
+
+    public function isMoreOrEqual(?int $compared = null): bool
+    {
+        $this->touch();
+        return $this->counter >= (is_null($compared) ? $this->max : $compared);
+    }
+
+    public function isMore(?int $compared = null): bool
+    {
+        $this->touch();
+        return $this->counter > (is_null($compared) ? $this->max : $compared);
+    }
+
+    public function isLessOrEqual(?int $compared = null): bool
+    {
+        $this->touch();
+        return $this->counter <= (is_null($compared) ? $this->max : $compared);
+    }
+
+    public function isLess(?int $compared = null): bool
+    {
+        $this->touch();
+        return $this->counter < (is_null($compared) ? $this->max : $compared);
+    }
+
+    public function toArray(): array
+    {
+        $this->touch();
+        return get_object_vars($this);
+    }
 }
