@@ -159,7 +159,7 @@ class Limiter implements Arrayable, Contracts\LimiterContract
 
     public function save(): bool
     {
-        return Cache::put($this->key, $this, intval($this->getTimeLeft() / 1000));
+        return Cache::put($this->key, $this, ceil($this->getTimeLeft() / 1000));
     }
 
     public function isMoreOrEqual(?int $compared = null): bool

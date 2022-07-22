@@ -65,6 +65,14 @@ class RequestLimiter
         'setPassportDataErrors',
     ];
 
+    protected string $limiterClass;
+    protected string $queue = '';
+
+    public function __construct(?string $limiter = null)
+    {
+        $this->limiterClass = $limiter ?? Limiter::class;
+    }
+
     public function __call(string $method, array $arguments)
     {
         if (mb_strpos($method, 'get') === 0) {
@@ -74,6 +82,61 @@ class RequestLimiter
         }
 
         return throw new \Exception("Method $method not allowed");
+    }
+
+    public function checkAndIncrease(string $method, ?int $chatId = null, ?int $inlineMessageId = null): int
+    {
+        if (!$ttl = $this->checkLimit($method, $chatId, $inlineMessageId)) {
+            $this->increase($method, $chatId, $inlineMessageId);
+        }
+        return $ttl;
+    }
+
+    public function checkLimit(string $method, ?int $chatId = null, ?int $inlineMessageId = null): int
+    {
+        if (!$this->isLimitedMethod($method, $chatId, $inlineMessageId)) {
+            return 0;
+        }
+
+        $isGroup = $this->isGroup($chatId, $inlineMessageId);
+
+        $group = $this->getLimiter(self::GROUPS_LIMITER_KEY);
+        $difference = $this->getLimiter(self::DIFFERENCE_LIMITER_KEY);
+        $particular = $chatId ? $this->getLimiter(self::PARTICULAR_CACHE_KEY, (string)$chatId) : null;
+
+        // Get all time lefts. Returns max
+        $ttl = [
+            $isGroup ? ($group->isLess() ? 0 : $group->getTimeLeft()) : 0,
+            $chatId ? ($particular->isLess() ? 0 : $particular->getTimeLeft()) : 0,
+            $difference->isLess() ? 0 : $difference->getTimeLeft()
+        ];
+
+        return max($ttl);
+    }
+
+    protected function isLimitedMethod(string $method, ?int $chatId = null, ?int $inlineMessageId = null): bool
+    {
+        return ($chatId || $inlineMessageId) && in_array($method, $this->limitedMethods, true);
+    }
+
+    protected function isGroup(?int $chatId = null, ?int $inlineMessageId = null): bool
+    {
+        return (is_numeric($chatId) && $chatId < 0) || $inlineMessageId;
+    }
+
+    protected function getLimiter(string $key, string $suffix = null): LimiterContract
+    {
+        if($key === self::PARTICULAR_CACHE_KEY){
+            $cacheKey = "{$this->queue}_{$key}_$suffix";
+        } else {
+            $cacheKey = "{$this->queue}_{$key}";
+        }
+
+        return match ($key) {
+            self::PARTICULAR_CACHE_KEY => $this->limiterClass::getOrCreate($cacheKey, $this->requestsForParticular, $this->limitForParticular),
+            self::DIFFERENCE_LIMITER_KEY => $this->limiterClass::getOrCreate($cacheKey, $this->requestsForDifference, $this->limitForDifference),
+            self::GROUPS_LIMITER_KEY => $this->limiterClass::getOrCreate($cacheKey, $this->requestsForGroups, $this->limitForGroups),
+        };
     }
 
     public function increase(string $method, ?int $chatId = null, ?int $inlineMessageId = null): bool
@@ -89,66 +152,17 @@ class RequestLimiter
         }
         $this->getLimiter(self::DIFFERENCE_LIMITER_KEY)->increment();
         if ($chatId) {
-            $particular =  $this->getLimiter(self::PARTICULAR_CACHE_KEY, (string)$chatId);
+            $particular = $this->getLimiter(self::PARTICULAR_CACHE_KEY, (string)$chatId);
             $particular->increment();
         }
 
         return true;
     }
 
-    public function checkAndIncrease(string $method, ?int $chatId = null, ?int $inlineMessageId = null): int
-    {
-        if(!$ttl = $this->checkLimit($method, $chatId, $inlineMessageId)){
-            $this->increase($method, $chatId, $inlineMessageId);
-        }
-        return $ttl;
-    }
-
     public function increaseAndCheck(string $method, ?int $chatId = null, ?int $inlineMessageId = null): int
     {
         $this->increase($method, $chatId, $inlineMessageId);
         return $this->checkLimit($method, $chatId, $inlineMessageId);
-    }
-
-    protected function isLimitedMethod(string $method, ?int $chatId = null, ?int $inlineMessageId = null): bool
-    {
-        return ($chatId || $inlineMessageId) && in_array($method, $this->limitedMethods, true);
-    }
-
-    protected function isGroup(?int $chatId = null, ?int $inlineMessageId = null): bool
-    {
-        return (is_numeric($chatId) && $chatId < 0) || $inlineMessageId;
-    }
-
-    protected function getLimiter(string $key, string $suffix = null): LimiterContract
-    {
-        return match ($key) {
-            self::PARTICULAR_CACHE_KEY => Limiter::getOrCreate($key.$suffix, $this->requestsForParticular, $this->limitForParticular),
-            self::DIFFERENCE_LIMITER_KEY => Limiter::getOrCreate($key.$suffix, $this->requestsForDifference, $this->limitForDifference),
-            self::GROUPS_LIMITER_KEY => Limiter::getOrCreate($key.$suffix, $this->requestsForGroups, $this->limitForGroups),
-        };
-    }
-
-    public function checkLimit(string $method, ?int $chatId = null, ?int $inlineMessageId = null): int
-    {
-        if (!$this->isLimitedMethod($method, $chatId, $inlineMessageId)) {
-            return 0;
-        }
-
-        $isGroup = $this->isGroup($chatId, $inlineMessageId);
-
-        $group = $this->getLimiter(self::GROUPS_LIMITER_KEY);
-        $difference = $this->getLimiter(self::DIFFERENCE_LIMITER_KEY);
-        $particular = $chatId ? $this->getLimiter(self::PARTICULAR_CACHE_KEY, (string) $chatId) : null;
-
-        // Get all time lefts. Returns max
-        $ttl = [
-            $isGroup ? ($group->isLess() ? 0 : $group->getTimeLeft()) : 0,
-            $chatId ? ($particular->isLess() ? 0 : $particular->getTimeLeft()) : 0,
-            $difference->isLess() ? 0 : $difference->getTimeLeft()
-        ];
-
-        return max($ttl);
     }
 
     public function setParticularLimits(int $requestsCount, int $perTime): void
@@ -173,8 +187,13 @@ class RequestLimiter
     {
         $this->getLimiter(self::GROUPS_LIMITER_KEY)->reset();
         $this->getLimiter(self::DIFFERENCE_LIMITER_KEY)->reset();
-        if($chatId){
-            $this->getLimiter(self::PARTICULAR_CACHE_KEY, (string) $chatId)->reset();
+        if ($chatId) {
+            $this->getLimiter(self::PARTICULAR_CACHE_KEY, (string)$chatId)->reset();
         }
+    }
+
+    public function setQueue(string|int $queue): void
+    {
+        $this->queue = (string) $queue;
     }
 }

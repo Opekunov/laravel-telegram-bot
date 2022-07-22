@@ -107,7 +107,7 @@ class RequestLimiterTest extends TestCase
         usleep($ttl / 2 * 1000);
         $this->assertTrue(0 < $limiter->checkLimit('sendMessage', -248));
         $this->assertTrue(0 < $limiter->checkLimit('sendMessage', -248));
-        usleep($ttl / 2 * 1000);
+        usleep($ttl / 2 * 1001);
         $this->assertEquals(0, $limiter->checkLimit('sendMessage', -248));
     }
 
@@ -126,6 +126,44 @@ class RequestLimiterTest extends TestCase
         $this->assertEquals(0, $limiter->checkLimit('sendMessage', 333));
         $this->assertNotEquals(0, $limiter->checkLimit('sendMessage', -333));
         $this->assertNotEquals(0, $limiter->checkLimit('sendMessage', null, 123));
+    }
+
+    public function testQueue()
+    {
+        $messages = range(1,300);
+
+        $limiter = $this->limiter;
+        $limiter->setDifferenceLimits(10, 1);
+
+        $queueCounter = 0;
+
+        foreach ($messages as $chat_id) {
+            // check
+            $ttl = $limiter->checkLimit('sendMessage', $chat_id);
+
+            //if has limit -> new queue
+            if($ttl > 0){
+                $this->assertEquals(0, ($chat_id - 1) % 10);
+                $queueCounter++;
+                $limiter->setQueue($chat_id);
+            }
+            $limiter->increase('sendMessage', $chat_id);
+        }
+
+        $this->assertEquals(300 / 10 - 1, $queueCounter);
+
+        $limiter->setQueue('another_queue');
+        foreach ($messages as $chat_id) {
+            // check
+            $ttl = $limiter->checkLimit('sendMessage', $chat_id);
+            if($ttl > 0) {
+                $this->assertTrue(true);
+                break;
+            }
+            $limiter->increase('sendMessage', $chat_id);
+            $this->assertEquals(0, $ttl);
+        }
+
     }
 
 }
