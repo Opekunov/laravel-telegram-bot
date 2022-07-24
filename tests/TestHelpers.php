@@ -92,15 +92,9 @@ class TestHelpers
      */
     public static function getFakeUpdateObject(array $data = []): Update
     {
-        $data = $data ?: [
+        $data = [
             'update_id' => mt_rand(),
-            'message'   => [
-                'message_id' => mt_rand(),
-                'chat'       => [
-                    'id' => mt_rand(),
-                ],
-                'date'       => time(),
-            ],
+            ...$data
         ];
         return new Update($data, 'testbot');
     }

@@ -14,7 +14,7 @@ namespace Opekunov\LaravelTelegramBot\Entities\Payments;
 use Opekunov\LaravelTelegramBot\Entities\Entity;
 use Opekunov\LaravelTelegramBot\Entities\ServerResponse;
 use Opekunov\LaravelTelegramBot\Entities\User;
-use Longman\TelegramBot\Request;
+use Opekunov\LaravelTelegramBot\Request;
 
 /**
  * Class PreCheckoutQuery

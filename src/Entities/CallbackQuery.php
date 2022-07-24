@@ -11,7 +11,7 @@
 
 namespace Opekunov\LaravelTelegramBot\Entities;
 
-use Longman\TelegramBot\Request;
+use Opekunov\LaravelTelegramBot\Request;
 
 /**
  * Class CallbackQuery.

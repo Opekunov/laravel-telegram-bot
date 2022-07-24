@@ -4,7 +4,7 @@ namespace Opekunov\LaravelTelegramBot;
 
 use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Exception\RequestException;
-use Opekunov\LaravelTelegramBot\Exceptions\TelegramBadTokenException;
+use Opekunov\LaravelTelegramBot\Exceptions\InvalidBotTokenException;
 use Opekunov\LaravelTelegramBot\Exceptions\TelegramBotKickedException;
 use Opekunov\LaravelTelegramBot\Exceptions\TelegramConnectionRefusedException;
 use Opekunov\LaravelTelegramBot\Exceptions\TelegramRequestException;
@@ -13,39 +13,40 @@ use Throwable;
 
 class TelegramExceptionHandler
 {
+    public TelegramTooManyRequestsException|InvalidBotTokenException|TelegramBotKickedException|TelegramRequestException|TelegramConnectionRefusedException $exception;
+
     /**
      * @param  Throwable  $exception
      * @param  int|null  $chatId
      *
-     * @return mixed
-     * @throws TelegramBadTokenException
-     * @throws TelegramBotKickedException
-     * @throws TelegramConnectionRefusedException
-     * @throws TelegramRequestException
-     * @throws TelegramTooManyRequestsException
      */
-    public function handle(Throwable $exception, ?int $chatId = null)
+    public function __construct(Throwable $exception, ?int $chatId = null)
     {
         if ($exception instanceof RequestException) {
             $statusCode = $exception->getResponse()->getStatusCode();
-            switch ($statusCode) {
-                case 404:
-                    throw new TelegramBadTokenException(
-                        $chatId,
-                        $exception->getCode(),
-                        'Bad token. Response body: '.$exception->getResponse()->getBody()
-                    );
-                case 429:
-                    throw new TelegramTooManyRequestsException($chatId, $exception->getMessage(), $exception->getCode(), $exception->getPrevious());
-                case 403:
-                    throw new TelegramBotKickedException($chatId, $exception->getMessage(), $exception->getCode(), $exception->getPrevious());
-                default:
-                    throw new TelegramRequestException($chatId, $exception->getMessage(), $exception->getCode(), $exception->getPrevious());
-            }
+            $body = $exception->getResponse()?->getBody();
+            return match ($statusCode) {
+                404 => new InvalidBotTokenException(),
+                429 => new TelegramTooManyRequestsException($chatId, $exception->getMessage(), $exception->getCode(), $exception->getPrevious()),
+                403 => new TelegramBotKickedException($chatId, $exception->getMessage(), $exception->getCode(), $exception->getPrevious()),
+                default => new TelegramRequestException($chatId, $exception->getMessage(), $exception->getCode(), $exception->getPrevious()),
+            };
         } elseif ($exception instanceof ConnectException) {
-            throw new TelegramConnectionRefusedException($chatId, $exception->getMessage(), $exception->getCode(), $exception->getPrevious());
+            return new TelegramConnectionRefusedException($chatId, $exception->getMessage(), $exception->getCode(), $exception->getPrevious());
         } else {
-            throw new TelegramRequestException($chatId, $exception->getMessage(), $exception->getCode(), $exception->getPrevious());
+            return new TelegramRequestException($chatId, $exception->getMessage(), $exception->getCode(), $exception->getPrevious());
         }
+    }
+
+    /**
+     * @throws TelegramConnectionRefusedException
+     * @throws InvalidBotTokenException
+     * @throws TelegramBotKickedException
+     * @throws TelegramTooManyRequestsException
+     * @throws TelegramRequestException
+     */
+    public function throw()
+    {
+        throw $this->exception;
     }
 }

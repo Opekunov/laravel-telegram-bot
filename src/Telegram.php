@@ -1,223 +1,387 @@
 <?php
 
+/**
+ * This file is part of the TelegramBot package.
+ *
+ * (c) Avtandil Kikabidze aka LONGMAN <akalongman@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Opekunov\LaravelTelegramBot;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
+defined('TB_BASE_PATH') || define('TB_BASE_PATH', __DIR__);
+defined('TB_BASE_COMMANDS_PATH') || define('TB_BASE_COMMANDS_PATH', TB_BASE_PATH . '/Commands');
+
+use Exception;
+use InvalidArgumentException;
+use Opekunov\LaravelTelegramBot\Commands\AdminCommand;
+use Opekunov\LaravelTelegramBot\Commands\Command;
+use Opekunov\LaravelTelegramBot\Commands\SystemCommand;
+use Opekunov\LaravelTelegramBot\Commands\UserCommand;
+use Opekunov\LaravelTelegramBot\Entities\Chat;
+use Opekunov\LaravelTelegramBot\Entities\ServerResponse;
+use Opekunov\LaravelTelegramBot\Entities\Update;
+use Opekunov\LaravelTelegramBot\Entities\User;
 use Opekunov\LaravelTelegramBot\Exceptions\TelegramException;
-use Opekunov\LaravelTelegramBot\Exceptions\TelegramRequestException;
-use Opekunov\LaravelTelegramBot\Exceptions\TelegramTooManyRequestsException;
+use PDO;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RegexIterator;
 
 class Telegram
 {
-    protected string $botToken = '';
+    /**
+     * Version
+     *
+     * @var string
+     */
+    protected string $version = '0.1.0';
+
+    /**
+     * Telegram API key
+     *
+     * @var string
+     */
+    protected string $api_key = '';
+
+    /**
+     * Telegram Bot username
+     *
+     * @var string
+     */
     protected string $botUsername = '';
-    protected int $botId;
-    protected string $baseApiUri = 'https://api.telegram.org';
-    private array $updates = [];
-    private int $timeout = 10;
 
     /**
-     * Create a Telegram instance from the bot token
+     * Telegram Bot id
      *
-     * @param  string|null  $botToken
-     * @param  string|null  $baseApiUri  default is https://api.telegram.org
-     * @param  string  $botUsername
+     * @var int
+     */
+    protected int $botId = 0;
+
+    /**
+     * Raw request data (json) for webhook methods
+     *
+     * @var string
+     */
+    protected string $input = '';
+
+    /**
+     * Current Update object
+     *
+     * @var Update
+     */
+    protected Update $update;
+
+    /**
+     * Upload path
+     *
+     * @var string
+     */
+    protected string $uploadPath = '';
+
+    /**
+     * Download path
+     *
+     * @var string
+     */
+    protected string $downloadPath = '';
+
+    /**
+     * Admins list
+     *
+     * @var array
+     */
+    protected array $adminsList = [];
+
+    /**
+     * Is running getUpdates without DB enabled
+     *
+     * @var bool
+     */
+    protected bool $getupdatesWithoutDatabase = false;
+
+    /**
+     * Last update ID
+     * Only used when running getUpdates without a database
+     *
+     * @var int
+     */
+    protected int $lastUpdateId;
+
+    /**
+     * The command to be executed when there's a new message update and nothing more suitable is found
+     */
+    public const GENERIC_MESSAGE_COMMAND = 'genericmessage';
+
+    /**
+     * The command to be executed by default (when no other relevant commands are applicable)
+     */
+    public const GENERIC_COMMAND = 'generic';
+
+    /**
+     * Update filter method
+     *
+     * @var callable
+     */
+    protected $updateFilter;
+
+    /**
+     * Telegram constructor.
+     *
+     * @param string $api_key
+     * @param string $bot_username
      *
      * @throws TelegramException
      */
-    public function __construct(string $botToken = null, ?string $baseApiUri = null, string $botUsername = '')
+    public function __construct(string $api_key, string $bot_username = '')
     {
-        $baseApiUri = $baseApiUri ?? $this->baseApiUri;
-
-        if (function_exists('config')) {
-            $botToken = $botToken ?? config('telegram.token');
-            $baseApiUri = $baseApiUri ?? config('telegram.base_uri') ?? $this->baseApiUri;
-            $botUsername = empty($botUsername) ? config('telegram.name') : $botUsername;
-            $this->timeout = config('telegram.timeout') ?? $this->timeout;
+        if (empty($api_key)) {
+            throw new TelegramException('API KEY not defined!');
         }
-
-        if (!filter_var($baseApiUri, FILTER_VALIDATE_URL)) {
-            throw new TelegramException('API Uri Bad or not defined');
+        preg_match('/(\d+):[\w\-]+/', $api_key, $matches);
+        if (!isset($matches[1])) {
+            throw new TelegramException('Invalid API KEY defined!');
         }
+        $this->botId  = (int)$matches[1];
+        $this->api_key = $api_key;
 
-        preg_match('/(\d+):[\w\-]+/', $botToken, $matches);
-        if (empty($botToken) || !isset($matches[1])) {
-            throw new TelegramException('Invalid Bot Token defined');
-        }
+        $this->botUsername = $bot_username;
 
-        $this->botId = (int)$matches[1];
-        $this->botUsername = $botUsername;
-
-        $this->baseApiUri = $baseApiUri ? trim($baseApiUri, '/') : $this->baseApiUri;
-        $this->botToken = $botToken;
+        Request::initialize($this);
     }
 
     /**
-     * A simple method for testing your bot's authentication token. Requires no parameters.
-     * Returns basic information about the bot in form of a User object.
+     * Get namespace from php file by src path
      *
-     * @return array
-     * @throws Exceptions\TelegramBadTokenException
-     * @throws Exceptions\TelegramBotKickedException
-     * @throws Exceptions\TelegramConnectionRefusedException
-     * @throws GuzzleException
-     * @throws TelegramRequestException
-     * @throws TelegramTooManyRequestsException
+     * @param string $src (absolute path to file)
+     *
+     * @return string|null ("Longman\TelegramBot\Commands\SystemCommands" for example)
      */
-    public function getMe(): array
+    protected function getFileNamespace(string $src): ?string
     {
-        return $this->sendRequest('getMe', null);
-    }
-
-    /**
-     * Send API request
-     *
-     * @param  string  $endPoint
-     * @param  array  $data
-     *
-     * @return array
-     * @throws Exceptions\TelegramBadTokenException
-     * @throws Exceptions\TelegramBotKickedException
-     * @throws Exceptions\TelegramConnectionRefusedException
-     * @throws GuzzleException
-     * @throws TelegramRequestException
-     * @throws TelegramTooManyRequestsException
-     */
-    protected function sendRequest(string $endPoint, array $data): array
-    {
-        $uri = $this->baseApiUri.'/bot'.$this->botToken.'/'.trim($endPoint, '/');
-
-        $client = new Client([
-            'timeout' => $this->timeout
-        ]);
-
-        try {
-            $response = $client->request('POST', $uri, ['form_params' => $data]);
-
-            $decodedResponse = json_decode($response->getBody(), true);
-            if ($decodedResponse === null) {
-                $status = $response->getStatusCode();
-                $body = $response->getBody();
-                throw new TelegramRequestException("Can't encode JSON. Status: {$status}. Body: {$body}");
-            }
-        } catch (\Exception $exception) {
-            (new TelegramExceptionHandler())->handle($exception, @$data['chat_id']);
-        }
-        return is_array($decodedResponse['result']) ? $decodedResponse['result'] : $decodedResponse;
-    }
-
-    /**
-     * Use this method to specify a url and receive incoming updates via an outgoing webhook. Whenever there is an update for the bot, we will send
-     * an HTTPS POST request to the specified url, containing a JSON-serialized Update. In case of an unsuccessful request, we will give up after a
-     * reasonable amount of attempts. Returns True on success.
-     *
-     *
-     * @param  string  $url  HTTPS url to send updates to. Use an empty string to remove webhook integration
-     * @param  int  $maxConnections  Maximum allowed number of simultaneous HTTPS connections to the webhook for update delivery, 1-100. Defaults to
-     *     50. Use lower values to limit the load on your bot's server, and higher values to increase your bot's throughput.
-     *
-     * @return array
-     * @throws Exceptions\TelegramBadTokenException
-     * @throws Exceptions\TelegramBotKickedException
-     * @throws Exceptions\TelegramConnectionRefusedException
-     * @throws GuzzleException
-     * @throws TelegramRequestException
-     * @throws TelegramTooManyRequestsException
-     * @see https://core.telegram.org/bots/api#setwebhook
-     */
-    public function setWebhook(string $url, int $maxConnections = 40): array
-    {
-        return $this->sendRequest(
-            'setWebhook',
-            [
-                'url' => $url,
-                'max_connections' => $maxConnections
-            ]
-        );
-    }
-
-    /**
-     * Use this method to remove webhook integration if you decide to switch back
-     * to getUpdates. Returns True on success.
-     *
-     * @param  bool  $dropPendingUpdates  Pass True to drop all pending updates
-     *
-     * @return array
-     * @throws Exceptions\TelegramBadTokenException
-     * @throws Exceptions\TelegramBotKickedException
-     * @throws Exceptions\TelegramConnectionRefusedException
-     * @throws GuzzleException
-     * @throws TelegramRequestException
-     * @throws TelegramTooManyRequestsException
-     */
-    public function deleteWebhook(bool $dropPendingUpdates = false): array
-    {
-        return $this->sendRequest('deleteWebhook', ['drop_pending_updates' => $dropPendingUpdates]);
-    }
-
-    /// Receive incoming messages using polling
-
-    /**
-     * Use this method to receive incoming updates using long polling.
-     *
-     * @param $offset Integer Identifier of the first update to be returned. Must be greater by one than the highest among the identifiers of
-     *     previously received updates. By default, updates starting with the earliest unconfirmed update are returned. An update is considered
-     *     confirmed as soon as getUpdates is called with an offset higher than its update_id.
-     * @param $limit Integer Limits the number of updates to be retrieved. Values between 1—100 are accepted. Defaults to 100
-     * @param $timeout Integer Timeout in seconds for long polling. Defaults to 0, i.e. usual short polling
-     * @param $update Boolean If true updates the pending message list to the last update received. Default to true.
-     *
-     * @return array the updates as Array.
-     * @throws Exceptions\TelegramBadTokenException
-     * @throws Exceptions\TelegramBotKickedException
-     * @throws Exceptions\TelegramConnectionRefusedException
-     * @throws GuzzleException
-     * @throws TelegramRequestException
-     * @throws TelegramTooManyRequestsException
-     * @see https://core.telegram.org/bots/api#getupdates
-     */
-    public function getUpdates(int $offset = 0, int $limit = 100, int $timeout = 0, bool $update = true): array
-    {
-        $content = ['offset' => $offset, 'limit' => $limit, 'timeout' => $timeout];
-        $this->updates = $this->sendRequest('getUpdates', $content);
-        if ($update) {
-            if (array_key_exists('result', $this->updates) && is_array($this->updates['result']) && count(
-                    $this->updates['result']
-                ) >= 1) { //for CLI working.
-                $lastElementId = $this->updates['result'][count($this->updates['result']) - 1]['update_id'] + 1;
-                $content = ['offset' => $lastElementId, 'limit' => 1, 'timeout' => $timeout];
-                $this->sendRequest('getUpdates', $content);
-            }
+        $content = file_get_contents($src);
+        if (preg_match('#^\s*namespace\s+(.+?);#m', $content, $m)) {
+            return $m[1];
         }
 
-        return $this->updates;
-    }
-
-    /** Use this method to use the bultin function like Text() or Username() on a specific update.
-     *
-     * @param $update int The index of the update in the updates array.
-     *
-     * @throws TelegramException
-     */
-    public function serveUpdate(int $update): TelegramRequest
-    {
-        if (!$this->updateCount()) {
-            throw new TelegramException("Updates is empty");
-        }
-        if (!isset($this->updates['result'][$update])) {
-            throw new TelegramException("$update doesn't exist in updates");
-        }
-        return new TelegramRequest($this->updates['result'][$update]);
+        return null;
     }
 
     /**
-     * Get the number of updates
+     * Set custom input string for debug purposes
+     *
+     * @param string $input (json format)
+     *
+     * @return Telegram
+     */
+    public function setCustomInput(string $input): Telegram
+    {
+        $this->input = $input;
+
+        return $this;
+    }
+
+    /**
+     * Get custom input string for debug purposes
+     *
+     * @return string
+     */
+    public function getCustomInput(): string
+    {
+        return $this->input;
+    }
+
+    /**
+     * Set custom upload path
+     *
+     * @param string $path Custom upload path
+     *
+     * @return Telegram
+     */
+    public function setUploadPath(string $path): Telegram
+    {
+        $this->uploadPath = $path;
+
+        return $this;
+    }
+
+    /**
+     * Get custom upload path
+     *
+     * @return string
+     */
+    public function getUploadPath(): string
+    {
+        return $this->uploadPath;
+    }
+
+    /**
+     * Set custom download path
+     *
+     * @param string $path Custom download path
+     *
+     * @return Telegram
+     */
+    public function setDownloadPath(string $path): Telegram
+    {
+        $this->downloadPath = $path;
+
+        return $this;
+    }
+
+    /**
+     * Get custom download path
+     *
+     * @return string
+     */
+    public function getDownloadPath(): string
+    {
+        return $this->downloadPath;
+    }
+
+    /**
+     * Get API key
+     *
+     * @return string
+     */
+    public function getApiKey(): string
+    {
+        return $this->api_key;
+    }
+
+    /**
+     * Get Bot name
+     *
+     * @return string
+     */
+    public function getBotUsername(): string
+    {
+        return $this->botUsername;
+    }
+
+    /**
+     * Get Bot Id
      *
      * @return int
      */
-    public function updateCount(): int
+    public function getBotId(): int
     {
-        return count($this->updates['result']);
+        return $this->botId;
+    }
+
+    /**
+     * Get Version
+     *
+     * @return string
+     */
+    public function getVersion(): string
+    {
+        return $this->version;
+    }
+
+    /**
+     * Set Webhook for bot
+     *
+     * @param string $url
+     * @param array  $data Optional parameters.
+     *
+     * @return ServerResponse
+     * @throws TelegramException
+     */
+    public function setWebhook(string $url, array $data = []): ServerResponse
+    {
+        if ($url === '') {
+            throw new TelegramException('Hook url is empty!');
+        }
+
+        $data        = array_intersect_key($data, array_flip([
+            'certificate',
+            'ip_address',
+            'max_connections',
+            'allowed_updates',
+            'drop_pending_updates',
+            'secret_token',
+        ]));
+        $data['url'] = $url;
+
+        // If the certificate is passed as a path, encode and add the file to the data array.
+        if (!empty($data['certificate']) && is_string($data['certificate'])) {
+            $data['certificate'] = Request::encodeFile($data['certificate']);
+        }
+
+        $result = Request::setWebhook($data);
+
+        if (!$result->isOk()) {
+            throw new TelegramException(
+                'Webhook was not set! Error: ' . $result->getErrorCode() . ' ' . $result->getDescription()
+            );
+        }
+
+        return $result;
+    }
+
+    /**
+     * Delete any assigned webhook
+     *
+     * @param array $data
+     *
+     * @return ServerResponse
+     * @throws TelegramException
+     */
+    public function deleteWebhook(array $data = []): ServerResponse
+    {
+        $result = Request::deleteWebhook($data);
+
+        if (!$result->isOk()) {
+            throw new TelegramException(
+                'Webhook was not deleted! Error: ' . $result->getErrorCode() . ' ' . $result->getDescription()
+            );
+        }
+
+        return $result;
+    }
+
+    /**
+     * Replace function `ucwords` for UTF-8 characters in the class definition and commands
+     *
+     * @param string $str
+     * @param string $encoding (default = 'UTF-8')
+     *
+     * @return string
+     */
+    protected function ucWordsUnicode(string $str, string $encoding = 'UTF-8'): string
+    {
+        return mb_convert_case($str, MB_CASE_TITLE, $encoding);
+    }
+
+    /**
+     * Replace function `ucfirst` for UTF-8 characters in the class definition and commands
+     *
+     * @param string $str
+     * @param string $encoding (default = 'UTF-8')
+     *
+     * @return string
+     */
+    protected function ucFirstUnicode(string $str, string $encoding = 'UTF-8'): string
+    {
+        return mb_strtoupper(mb_substr($str, 0, 1, $encoding), $encoding)
+            . mb_strtolower(mb_substr($str, 1, mb_strlen($str), $encoding), $encoding);
+    }
+
+    /**
+     * Enable requests limiter
+     *
+     * @param array $options
+     *
+     * @return Telegram
+     * @throws TelegramException
+     */
+    public function enableLimiter(array $options = []): Telegram
+    {
+        Request::setLimiter(true, $options);
+
+        return $this;
     }
 }

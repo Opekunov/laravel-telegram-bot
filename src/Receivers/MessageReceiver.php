@@ -100,19 +100,16 @@ class MessageReceiver extends Receiver
 
     public function execute(): void
     {
-        parent::execute();
+        if(!$this->checkFilters()) {
+            return;
+        }
 
         $handler = $this->handler;
         $message = $this->message;
 
-        if (isset($this->actions['pre_execute'])) {
-            call_user_func($this->actions['pre_execute'], $message, $handler);
-        }
+        $this->preExecute($message, $handler);
 
         $messageType = $message->getType();
-
-        if (isset($this->actions[$messageType])) {
-            call_user_func($this->actions[$messageType], $message, $handler);
-        }
+        $this->executeByType($messageType, $message, $handler);
     }
 }
