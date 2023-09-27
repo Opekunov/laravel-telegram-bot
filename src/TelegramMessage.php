@@ -651,4 +651,10 @@ class TelegramMessage extends Telegram
     {
         return $this->sendRequest('deleteMessage', ['chat_id' => $chatId, 'message_id' => $messageId]);
     }
+
+    public function sendRaw($chatId, $raw)
+    {
+        $raw['chat_id'] = $chatId;
+        $this->sendRequest('sendMessage', $raw);
+    }
 }
