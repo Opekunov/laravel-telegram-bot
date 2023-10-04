@@ -344,11 +344,17 @@ class TelegramMessage extends Telegram
      *
      * @return $this
      */
-    public function setReplyKeyboard(array $rows): TelegramMessage
+    public function setReplyKeyboardByRows(array $rows): TelegramMessage
     {
         foreach ($rows as $row) {
             $this->addReplyButtonsRow($row);
         }
+        return $this;
+    }
+
+    public function setReplyKeyboard(array $data): TelegramMessage
+    {
+        $this->payload['reply_markup'] = $data['reply_markup'] ?? $data;
         return $this;
     }
 
