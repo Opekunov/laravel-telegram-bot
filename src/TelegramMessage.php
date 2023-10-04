@@ -652,9 +652,16 @@ class TelegramMessage extends Telegram
         return $this->sendRequest('deleteMessage', ['chat_id' => $chatId, 'message_id' => $messageId]);
     }
 
-    public function sendRaw($chatId, $raw)
+    /**
+     * Set message parse mode
+     *
+     * @param  string  $parseMode
+     *
+     * @return $this
+     */
+    public function setParseMode(string $parseMode): static
     {
-        $raw['chat_id'] = $chatId;
-        $this->sendRequest('sendMessage', $raw);
+        $this->payload['parse_mode'] = $parseMode;
+        return $this;
     }
 }
