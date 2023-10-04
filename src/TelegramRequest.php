@@ -79,6 +79,7 @@ class TelegramRequest
 
     protected array $data;
     protected ?int $updateId;
+    protected array $context = [];
 
     /**
      * @param  array  $updateData
@@ -956,6 +957,46 @@ class TelegramRequest
         }
 
         return null;
+    }
+
+    /**
+     * Add custom data as context
+     *
+     * @param  array  $ctx
+     *
+     * @return static
+     */
+    public function setContext(array $ctx): static
+    {
+        $this->context = $ctx;
+        return $this;
+    }
+
+    /**
+     * Add custom data as context
+     *
+     * @param  string|int  $key
+     * @param  $ctx
+     *
+     * @return static
+     */
+    public function setContextByKey(string|int $key, $ctx): static
+    {
+        $this->context[$key] = $ctx;
+        return $this;
+    }
+
+    /**
+     * Returns the entire custom context or part if the key is specified
+     *
+     * @return array
+     */
+    public function getContext(string|int $key = null): mixed
+    {
+        if($key)
+            return @$this->context[$key];
+        else
+            return $this->context;
     }
 
 }

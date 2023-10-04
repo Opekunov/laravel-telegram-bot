@@ -173,7 +173,7 @@ class TelegramMessage extends Telegram
         }
         $this->escapeByParseMode();
 
-        if (isset($this->payload['reply_markup'])) {
+        if (isset($this->payload['reply_markup']) && is_array($this->payload['reply_markup'])) {
             $this->payload['reply_markup'] = json_encode($this->payload['reply_markup']);
         }
 
